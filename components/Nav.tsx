@@ -92,21 +92,6 @@ export function Nav() {
           <span className="display">Kindle</span>
         </a>
 
-        <nav aria-label="Primary" className="hidden items-center gap-9 text-sm md:flex">
-          {links.filter((l) => l.bar).map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="group"
-              onClick={(e) => {
-                e.preventDefault();
-                go(l.href);
-              }}
-            >
-              <RollLabel>{l.label}</RollLabel>
-            </a>
-          ))}
-        </nav>
 
         <div className="flex items-center gap-3">
           <Magnetic className="hidden md:inline-block">
