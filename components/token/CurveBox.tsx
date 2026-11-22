@@ -86,7 +86,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       try {
         if (side === "buy") {
           const q = await client.readContract({
-            address: FACTORY,
+            address: FACTORY!,
             abi: FACTORY_ABI,
             functionName: "quoteBuy",
             args: [token, parseEther(amount), account ? (account as Address) : ZERO],
@@ -94,7 +94,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
           if (live) setOut({ value: q.out, fee: q.fee, tax: q.snipe, refund: q.refund });
         } else {
           const [eth, fee] = await client.readContract({
-            address: FACTORY,
+            address: FACTORY!,
             abi: FACTORY_ABI,
             functionName: "quoteSell",
             args: [token, parseUnits(amount, 18)],
@@ -121,24 +121,27 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       await ensureChain(eth, "robinhood");
       const wallet = createWalletClient({ account: account as Address, chain: robinhood, transport: custom(eth as unknown as Parameters<typeof custom>[0]) });
       const min = (out.value * BigInt(Math.round((100 - slippage) * 100))) / 10000n;
-      const { request } =
-        side === "buy"
-          ? await client.simulateContract({
-              account: account as Address,
-              address: FACTORY,
-              abi: FACTORY_ABI,
-              functionName: "buy",
-              args: [token, min],
-              value: parseEther(amount),
-            })
-          : await client.simulateContract({
-              account: account as Address,
-              address: FACTORY,
-              abi: FACTORY_ABI,
-              functionName: "sell",
-              args: [token, parseUnits(amount, 18), min],
-            });
-      const hash = await wallet.writeContract(request);
+      let hash: `0x${string}`;
+      if (side === "buy") {
+        const { request } = await client.simulateContract({
+          account: account as Address,
+          address: FACTORY,
+          abi: FACTORY_ABI,
+          functionName: "buy",
+          args: [token, min],
+          value: parseEther(amount),
+        });
+        hash = await wallet.writeContract(request);
+      } else {
+        const { request } = await client.simulateContract({
+          account: account as Address,
+          address: FACTORY,
+          abi: FACTORY_ABI,
+          functionName: "sell",
+          args: [token, parseUnits(amount, 18), min],
+        });
+        hash = await wallet.writeContract(request);
+      }
       const r = await client.waitForTransactionReceipt({ hash });
       if (r.status !== "success") throw new Error("The transaction failed on-chain.");
       setMsg({ ok: true, text: side === "buy" ? `Bought ${fmt(out.value, 18, 2)} ${symbol}.` : `Sold for ${fmt(out.value)} ETH.` });
