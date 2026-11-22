@@ -25,8 +25,20 @@ type Quote = {
 
 const client = createPublicClient({ transport: http(NETWORKS.robinhood.rpc) });
 
-/** Buy or sell a token for ETH through Uniswap (v3 pools, or v4 pools such as Kindle launches). */
-export function SwapBox({ address, symbol }: { address: string; symbol: string }) {
+/** Buy or sell a token for its pair asset (ETH by default) through Uniswap (v3 pools, or v4 pools such as Kindle launches). */
+export function SwapBox({
+  address,
+  symbol,
+  pair,
+}: {
+  address: string;
+  symbol: string;
+  /** The token's pair asset (ETH when omitted). */
+  pair?: { address: string; symbol: string } | null;
+}) {
+  const isEthPair = !pair || /^0x0{40}$/i.test(pair.address);
+  const payId = isEthPair ? "ETH" : pair!.address;
+  const paySym = isEthPair ? "ETH" : pair!.symbol;
   const account = useAccount();
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -55,8 +67,8 @@ export function SwapBox({ address, symbol }: { address: string; symbol: string }
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           from: account,
-          token_in: side === "buy" ? "ETH" : address,
-          token_out: side === "buy" ? address : "ETH",
+          token_in: side === "buy" ? payId : address,
+          token_out: side === "buy" ? address : payId,
           amount_in: amount,
           slippage_percent: slippage,
         }),
@@ -117,7 +129,7 @@ export function SwapBox({ address, symbol }: { address: string; symbol: string }
       </div>
 
       <label htmlFor="swap-amount" className="mb-1 block text-xs font-semibold opacity-70">
-        You pay ({side === "buy" ? "ETH" : symbol})
+        You pay ({side === "buy" ? paySym : symbol})
       </label>
       <div className="flex items-center gap-2 rounded-2xl border border-ink/15 px-4">
         <input
@@ -131,12 +143,12 @@ export function SwapBox({ address, symbol }: { address: string; symbol: string }
           }}
           className="h-14 min-w-0 flex-1 bg-transparent text-xl font-semibold outline-none"
         />
-        <span className="font-bold">{side === "buy" ? "ETH" : symbol}</span>
+        <span className="font-bold">{side === "buy" ? paySym : symbol}</span>
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-2 text-xs">
         <span className="flex items-center gap-1 opacity-70">
-          <ArrowDownUp className="size-3.5" /> You receive {side === "buy" ? symbol : "ETH"}
+          <ArrowDownUp className="size-3.5" /> You receive {side === "buy" ? symbol : paySym}
         </span>
         <label className="flex items-center gap-2">
           <span className="opacity-70">Max slippage</span>

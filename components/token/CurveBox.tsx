@@ -6,11 +6,8 @@ import {
   createWalletClient,
   custom,
   defineChain,
-  formatEther,
   formatUnits,
   http,
-  parseAbi,
-  parseEther,
   parseUnits,
   type Address,
 } from "viem";
@@ -19,7 +16,7 @@ import { WalletButton } from "../WalletButton";
 import { useAccount } from "@/lib/wallet-store";
 import { ensureChain, getWallet } from "@/lib/wallet";
 import { NETWORKS } from "@/lib/networks";
-import { FACTORY, FACTORY_ABI, GRADUATION_ETH } from "@/lib/factory";
+import { ERC20_ABI, ETH_ADDRESS, FACTORY, FACTORY_ABI } from "@/lib/factory";
 import { cn } from "@/lib/utils";
 
 const robinhood = defineChain({
@@ -29,10 +26,10 @@ const robinhood = defineChain({
   rpcUrls: { default: { http: [NETWORKS.robinhood.rpc] } },
 });
 const client = createPublicClient({ chain: robinhood, transport: http(NETWORKS.robinhood.rpc) });
-const ERC20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
 const ZERO = "0x0000000000000000000000000000000000000000" as Address;
 
-type State = { graduated: boolean; sold: bigint; realEth: bigint; createdAt: bigint; creator: string };
+type State = { graduated: boolean; sold: bigint; raised: bigint; createdAt: bigint; creator: string };
+type QuoteAsset = { address: string; symbol: string; decimals: number };
 
 const fmt = (v: bigint, d = 18, max = 6) => {
   const n = Number(formatUnits(v, d));
@@ -40,7 +37,23 @@ const fmt = (v: bigint, d = 18, max = 6) => {
 };
 
 /** Buy or sell on Kindle's bonding curve (before graduation), straight against the factory. */
-export function CurveBox({ address, symbol, onGraduated }: { address: string; symbol: string; onGraduated?: () => void }) {
+export function CurveBox({
+  address,
+  symbol,
+  quote,
+  graduation,
+  taxPct,
+  onGraduated,
+}: {
+  address: string;
+  symbol: string;
+  quote: QuoteAsset;
+  graduation: number;
+  taxPct: number;
+  onGraduated?: () => void;
+}) {
+  const isEth = quote.address.toLowerCase() === ETH_ADDRESS;
+  const qd = quote.decimals;
   const account = useAccount();
   const token = address as Address;
   const [state, setState] = useState<State | null>(null);
@@ -48,7 +61,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState(2);
-  const [out, setOut] = useState<{ value: bigint; fee: bigint; tax: bigint; refund: bigint } | null>(null);
+  const [out, setOut] = useState<{ value: bigint; fee: bigint; tax: bigint; snipe: bigint; refund: bigint } | null>(null);
   const [balance, setBalance] = useState<{ eth: bigint; tok: bigint } | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -59,17 +72,19 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       client.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "launchOf", args: [token] }),
       client.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "snipeTaxBps", args: [token] }),
     ]);
-    setState({ graduated: l.graduated, sold: l.sold, realEth: l.realEth, createdAt: l.createdAt, creator: l.creator });
+    setState({ graduated: l.graduated, sold: l.sold, raised: l.raised, createdAt: l.createdAt, creator: l.creator });
     setSnipeBps(Number(tax));
     if (l.graduated) onGraduated?.();
     if (account) {
       const [eth, tok] = await Promise.all([
-        client.getBalance({ address: account as Address }),
-        client.readContract({ address: token, abi: ERC20, functionName: "balanceOf", args: [account as Address] }),
+        isEth
+          ? client.getBalance({ address: account as Address })
+          : client.readContract({ address: quote.address as Address, abi: ERC20_ABI, functionName: "balanceOf", args: [account as Address] }),
+        client.readContract({ address: token, abi: ERC20_ABI, functionName: "balanceOf", args: [account as Address] }),
       ]);
       setBalance({ eth, tok });
     }
-  }, [token, account, onGraduated]);
+  }, [token, account, onGraduated, isEth, quote.address]);
 
   useEffect(() => {
     void refresh().catch(() => {});
@@ -89,17 +104,17 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
             address: FACTORY!,
             abi: FACTORY_ABI,
             functionName: "quoteBuy",
-            args: [token, parseEther(amount), account ? (account as Address) : ZERO],
+            args: [token, parseUnits(amount, qd), account ? (account as Address) : ZERO],
           });
-          if (live) setOut({ value: q.out, fee: q.fee, tax: q.snipe, refund: q.refund });
+          if (live) setOut({ value: q.out, fee: q.fee, tax: q.tax, snipe: q.snipe, refund: parseUnits(amount, qd) - q.used });
         } else {
-          const [eth, fee] = await client.readContract({
+          const [got, fee, tax] = await client.readContract({
             address: FACTORY!,
             abi: FACTORY_ABI,
             functionName: "quoteSell",
             args: [token, parseUnits(amount, 18)],
           });
-          if (live) setOut({ value: eth, fee, tax: 0n, refund: 0n });
+          if (live) setOut({ value: got, fee, tax, snipe: 0n, refund: 0n });
         }
       } catch {
         if (live) setOut(null);
@@ -123,13 +138,33 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       const min = (out.value * BigInt(Math.round((100 - slippage) * 100))) / 10000n;
       let hash: `0x${string}`;
       if (side === "buy") {
+        const amountIn = parseUnits(amount, qd);
+        if (!isEth) {
+          const allowance = await client.readContract({
+            address: quote.address as Address,
+            abi: ERC20_ABI,
+            functionName: "allowance",
+            args: [account as Address, FACTORY],
+          });
+          if (allowance < amountIn) {
+            setMsg({ ok: true, text: `Step 1 of 2: approve ${amount} ${quote.symbol} for the curve…` });
+            const { request: ap } = await client.simulateContract({
+              account: account as Address,
+              address: quote.address as Address,
+              abi: ERC20_ABI,
+              functionName: "approve",
+              args: [FACTORY, amountIn],
+            });
+            await client.waitForTransactionReceipt({ hash: await wallet.writeContract(ap) });
+          }
+        }
         const { request } = await client.simulateContract({
           account: account as Address,
           address: FACTORY,
           abi: FACTORY_ABI,
           functionName: "buy",
-          args: [token, min],
-          value: parseEther(amount),
+          args: [token, amountIn, min],
+          value: isEth ? amountIn : 0n,
         });
         hash = await wallet.writeContract(request);
       } else {
@@ -144,7 +179,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       }
       const r = await client.waitForTransactionReceipt({ hash });
       if (r.status !== "success") throw new Error("The transaction failed on-chain.");
-      setMsg({ ok: true, text: side === "buy" ? `Bought ${fmt(out.value, 18, 2)} ${symbol}.` : `Sold for ${fmt(out.value)} ETH.` });
+      setMsg({ ok: true, text: side === "buy" ? `Bought ${fmt(out.value, 18, 2)} ${symbol}.` : `Sold for ${fmt(out.value, qd)} ${quote.symbol}.` });
       setAmount("");
       await refresh();
     } catch (e) {
@@ -156,7 +191,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
 
   if (!FACTORY) return null;
   const progress = state ? Number((state.sold * 10000n) / (800_000_000n * 10n ** 18n)) / 100 : 0;
-  const raised = state ? Number(formatEther(state.realEth)) : 0;
+  const raised = state ? Number(formatUnits(state.raised, qd)) : 0;
   const isCreator = !!account && !!state && account.toLowerCase() === state.creator.toLowerCase();
 
   return (
@@ -169,7 +204,8 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
         <div className="h-full rounded-full bg-coral" style={{ width: `${Math.min(100, progress)}%` }} />
       </div>
       <p className="mt-2 text-xs opacity-70">
-        {raised.toFixed(3)} / {GRADUATION_ETH} ETH raised. When the curve sells out, {symbol} graduates to a locked Uniswap v4 pool.
+        {raised.toLocaleString("en-US", { maximumFractionDigits: 4 })} / {graduation.toLocaleString("en-US")} {quote.symbol} raised. When the
+        curve sells out, {symbol} graduates to a locked Uniswap v4 pool.{taxPct > 0 ? ` Creator tax: ${taxPct}% per trade.` : ""}
       </p>
       {snipeBps > 0 && !isCreator && (
         <p className="mt-3 rounded-xl bg-[#c62828]/10 px-3 py-2 text-xs font-semibold text-[#c62828]">
@@ -195,7 +231,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
       </div>
 
       <label className="mt-4 block text-xs font-semibold opacity-70">
-        {side === "buy" ? "You pay (ETH)" : `You sell (${symbol})`}
+        {side === "buy" ? `You pay (${quote.symbol})` : `You sell (${symbol})`}
         <input
           value={amount}
           onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
@@ -210,7 +246,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
           onClick={() => setAmount(side === "buy" ? "" : formatUnits(balance.tok, 18))}
           className="mt-1 text-xs opacity-60 hover:opacity-100"
         >
-          Balance: {side === "buy" ? `${fmt(balance.eth)} ETH` : `${fmt(balance.tok, 18, 2)} ${symbol} (use max)`}
+          Balance: {side === "buy" ? `${fmt(balance.eth, qd)} ${quote.symbol}` : `${fmt(balance.tok, 18, 2)} ${symbol} (use max)`}
         </button>
       )}
 
@@ -218,22 +254,36 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
         <div className="mt-3 space-y-1 rounded-2xl bg-ink/5 p-3 text-xs">
           <div className="flex justify-between">
             <span className="opacity-70">You receive about</span>
-            <b>{side === "buy" ? `${fmt(out.value, 18, 2)} ${symbol}` : `${fmt(out.value)} ETH`}</b>
+            <b>{side === "buy" ? `${fmt(out.value, 18, 2)} ${symbol}` : `${fmt(out.value, qd)} ${quote.symbol}`}</b>
           </div>
           <div className="flex justify-between">
             <span className="opacity-70">Fee (1%)</span>
-            <span>{fmt(out.fee)} ETH</span>
+            <span>
+              {fmt(out.fee, qd)} {quote.symbol}
+            </span>
           </div>
           {out.tax > 0n && (
+            <div className="flex justify-between">
+              <span className="opacity-70">Creator tax ({taxPct}%)</span>
+              <span>
+                {fmt(out.tax, qd)} {quote.symbol}
+              </span>
+            </div>
+          )}
+          {out.snipe > 0n && (
             <div className="flex justify-between text-[#c62828]">
               <span>Anti-snipe tax</span>
-              <span>{fmt(out.tax)} ETH</span>
+              <span>
+                {fmt(out.snipe, qd)} {quote.symbol}
+              </span>
             </div>
           )}
           {out.refund > 0n && (
             <div className="flex justify-between">
-              <span className="opacity-70">Refunded (curve sells out)</span>
-              <span>{fmt(out.refund)} ETH</span>
+              <span className="opacity-70">Not used (curve sells out)</span>
+              <span>
+                {fmt(out.refund, qd)} {quote.symbol}
+              </span>
             </div>
           )}
           <div className="flex justify-between">

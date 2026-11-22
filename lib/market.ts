@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createPublicClient, http, parseAbi, type Address } from "viem";
-import { FACTORY, FACTORY_ABI } from "./factory";
+import { CURVE_RAW, ERC20_ABI, FACTORY, FACTORY_ABI, VIRTUAL_TOKENS_RAW, virtualQuote } from "./factory";
 import { NETWORKS } from "./networks";
 
 // Token lists come from Kindle's own factory contract; prices, market caps and volume from DexScreener.
@@ -26,7 +26,11 @@ export type TokenRow = {
   /** Bonding-curve state for Kindle launches (null for other tokens). */
   graduated: boolean | null;
   progress: number | null;
-  raisedEth: number | null;
+  /** Pair asset raised on the curve / needed to graduate, in whole units of the pair asset. */
+  raised: number | null;
+  graduation: number | null;
+  quote: { address: string; symbol: string; decimals: number } | null;
+  taxPct: number | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;
@@ -112,10 +116,13 @@ function merge(row: TokenRow, p: Pair | undefined): TokenRow {
 type Info = {
   token: string;
   creator: string;
+  quote: string;
   createdAt: bigint;
+  taxBps: number;
   graduated: boolean;
   sold: bigint;
-  realEth: bigint;
+  raised: bigint;
+  graduation: bigint;
   name: string;
   symbol: string;
   image: string;
@@ -124,31 +131,49 @@ type Info = {
 const rpc = () =>
   createPublicClient({ transport: http(process.env.ROBINHOOD_RPC_URL || NETWORKS.robinhood.rpc, { timeout: 12_000 }) });
 
-// Curve constants (must match lib/factory-source.ts)
 const E18 = 10n ** 18n;
-const CURVE = 800_000_000n * E18;
-const V0 = 14n * 10n ** 17n;
-const T0 = 1066666666666666666666666667n;
+const NATIVE = "0x0000000000000000000000000000000000000000";
 
-/** ETH/USD from DexScreener (WETH on Robinhood Chain), cached 60s. */
-let ethMemo: { at: number; usd: number | null } | null = null;
-async function ethUsd(): Promise<number | null> {
-  if (ethMemo && Date.now() - ethMemo.at < 60_000) return ethMemo.usd;
+/** USD price of a pair asset (ETH via WETH) from DexScreener, cached 60s. */
+const usdMemo = new Map<string, { at: number; usd: number | null }>();
+async function assetUsd(asset: string): Promise<number | null> {
+  const key = (asset === NATIVE ? WETH : asset).toLowerCase();
+  const hit = usdMemo.get(key);
+  if (hit && Date.now() - hit.at < 60_000) return hit.usd;
   let usd: number | null = null;
   try {
-    const pairs = (await getJson(`${DEXSCREENER}/tokens/v1/robinhood/${WETH}`, undefined, 60)) as Pair[];
+    const pairs = (await getJson(`${DEXSCREENER}/tokens/v1/robinhood/${key}`, undefined, 60)) as Pair[];
     const best = (Array.isArray(pairs) ? pairs : [])
-      .filter((p) => p.baseToken?.address?.toLowerCase() === WETH.toLowerCase())
+      .filter((p) => p.baseToken?.address?.toLowerCase() === key)
       .sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
     usd = num(best?.priceUsd);
   } catch {}
-  ethMemo = { at: Date.now(), usd };
+  usdMemo.set(key, { at: Date.now(), usd });
   return usd;
 }
 
-const rowOf = (t: Info, eth: number | null): TokenRow => {
-  const priceEth = Number(((V0 + t.realEth) * 10n ** 12n) / (T0 - t.sold)) / 1e12; // ETH per whole token
-  const priceUsd = !t.graduated && eth ? priceEth * eth : null;
+/** Symbol and decimals of a pair asset, cached for the instance. */
+const metaMemo = new Map<string, { symbol: string; decimals: number }>();
+async function assetMeta(asset: string): Promise<{ symbol: string; decimals: number }> {
+  if (asset === NATIVE) return { symbol: "ETH", decimals: 18 };
+  const hit = metaMemo.get(asset.toLowerCase());
+  if (hit) return hit;
+  const c = rpc();
+  const [symbol, decimals] = await Promise.all([
+    c.readContract({ address: asset as Address, abi: ERC20_ABI, functionName: "symbol" }).catch(() => "?"),
+    c.readContract({ address: asset as Address, abi: ERC20_ABI, functionName: "decimals" }).catch(() => 18),
+  ]);
+  const meta = { symbol: String(symbol), decimals: Number(decimals) };
+  metaMemo.set(asset.toLowerCase(), meta);
+  return meta;
+}
+
+const rowOf = (t: Info, usd: number | null, meta: { symbol: string; decimals: number }): TokenRow => {
+  const unit = 10 ** meta.decimals;
+  // curve price in pair-asset units per whole token
+  const priceQuote =
+    Number(((virtualQuote(t.graduation) + t.raised) * 10n ** 12n * E18) / (VIRTUAL_TOKENS_RAW - t.sold)) / 1e12 / unit;
+  const priceUsd = !t.graduated && usd ? priceQuote * usd : null;
   return {
     address: t.token,
     name: t.name || "Unknown",
@@ -158,8 +183,11 @@ const rowOf = (t: Info, eth: number | null): TokenRow => {
     creator: t.creator,
     isKindle: true,
     graduated: t.graduated,
-    progress: t.graduated ? 100 : Number((t.sold * 10000n) / CURVE) / 100,
-    raisedEth: t.graduated ? null : Number(t.realEth) / 1e18,
+    progress: t.graduated ? 100 : Number((t.sold * 10000n) / CURVE_RAW) / 100,
+    raised: t.graduated ? null : Number(t.raised) / unit,
+    graduation: Number(t.graduation) / unit,
+    quote: { address: t.quote, symbol: meta.symbol, decimals: meta.decimals },
+    taxPct: t.taxBps / 100,
     priceUsd,
     marketCap: priceUsd ? priceUsd * 1e9 : null,
     volume24h: null,
@@ -174,16 +202,24 @@ const rowOf = (t: Info, eth: number | null): TokenRow => {
   };
 };
 
+async function rowsOf(list: readonly Info[]): Promise<TokenRow[]> {
+  const quotes = [...new Set(list.map((t) => t.quote.toLowerCase()))];
+  const info = new Map(
+    await Promise.all(quotes.map(async (q) => [q, { usd: await assetUsd(q), meta: await assetMeta(q) }] as const)),
+  );
+  return list.map((t) => {
+    const x = info.get(t.quote.toLowerCase())!;
+    return rowOf(t, x.usd, x.meta);
+  });
+}
+
 /** Newest launches from Kindle's factory (up to 200), cached for 20 seconds per server instance. */
 let memo: { at: number; rows: TokenRow[] } | null = null;
 async function kindleLaunches(): Promise<TokenRow[]> {
   if (!FACTORY) return [];
   if (memo && Date.now() - memo.at < 20_000) return memo.rows;
-  const [list, eth] = await Promise.all([
-    rpc().readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "recent", args: [0n, 200n] }) as Promise<readonly Info[]>,
-    ethUsd(),
-  ]);
-  memo = { at: Date.now(), rows: list.map((t) => rowOf(t, eth)) };
+  const list = (await rpc().readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "recent", args: [0n, 200n] })) as readonly Info[];
+  memo = { at: Date.now(), rows: await rowsOf(list) };
   return memo.rows;
 }
 
@@ -202,7 +238,7 @@ export async function listTokens(tab: Tab): Promise<TokenRow[]> {
   if (tab === "top") rows.sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
   // Trending: pool volume for graduated tokens, curve momentum (ETH raised) for the rest
   if (tab === "trending")
-    rows.sort((a, b) => (b.volume24h ?? (b.raisedEth ?? 0) * 1000) - (a.volume24h ?? (a.raisedEth ?? 0) * 1000));
+    rows.sort((a, b) => (b.volume24h ?? (b.progress ?? 0) * 1000) - (a.volume24h ?? (a.progress ?? 0) * 1000));
   if (tab === "graduated")
     rows = rows
       .filter((r) => (r.isKindle ? r.graduated : (r.marketCap ?? 0) >= GRADUATE_MCAP))
@@ -218,22 +254,28 @@ export async function getToken(address: string): Promise<TokenRow | null> {
   if (FACTORY) {
     try {
       const c = rpc();
-      const l = (await c.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "launchOf", args: [address as Address] })) as {
-        token: string;
-        creator: string;
-        createdAt: bigint;
-        graduated: boolean;
-        sold: bigint;
-        realEth: bigint;
-      };
+      const l = await c.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "launchOf", args: [address as Address] });
+      const pair = await c.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "pairs", args: [l.quote] });
       const erc = parseAbi(["function name() view returns (string)", "function symbol() view returns (string)", "function image() view returns (string)"]);
       const [name, symbol, image] = await Promise.all(
         (["name", "symbol", "image"] as const).map((f) => c.readContract({ address: address as Address, abi: erc, functionName: f }) as Promise<string>),
       );
-      row = rowOf(
-        { token: l.token, creator: l.creator, createdAt: l.createdAt, graduated: l.graduated, sold: l.sold, realEth: l.realEth, name, symbol, image },
-        await ethUsd(),
-      );
+      [row] = await rowsOf([
+        {
+          token: l.token,
+          creator: l.creator,
+          quote: l.quote,
+          createdAt: l.createdAt,
+          taxBps: l.taxBps,
+          graduated: l.graduated,
+          sold: l.sold,
+          raised: l.raised,
+          graduation: pair[1],
+          name,
+          symbol,
+          image,
+        },
+      ]);
     } catch {
       // not a Kindle launch: still show it if DexScreener knows it
     }
@@ -251,7 +293,10 @@ export async function getToken(address: string): Promise<TokenRow | null> {
     isKindle: false,
     graduated: null,
     progress: null,
-    raisedEth: null,
+    raised: null,
+    graduation: null,
+    quote: null,
+    taxPct: null,
     priceUsd: null,
     marketCap: null,
     volume24h: null,

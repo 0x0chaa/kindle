@@ -5,7 +5,7 @@ import { ArrowLeft, Check, Copy, ExternalLink } from "lucide-react";
 import { useApp } from "../Providers";
 import { TokenAvatar } from "./TokenAvatar";
 import { SwapBox } from "./SwapBox";
-import { CollectFees } from "./CollectFees";
+import { CreatorPanel } from "./CreatorPanel";
 import { CurveBox } from "./CurveBox";
 import type { TokenRow } from "./types";
 import { age, pct, usd } from "@/lib/format";
@@ -125,12 +125,19 @@ export function TokenView({ token }: { token: TokenRow }) {
 
         <aside className="lg:col-span-4">
           <div className="lg:sticky lg:top-28">
-            {graduated ? (
-              <SwapBox address={token.address} symbol={token.symbol} />
+            {graduated || !token.quote ? (
+              <SwapBox address={token.address} symbol={token.symbol} pair={token.quote} />
             ) : (
-              <CurveBox address={token.address} symbol={token.symbol} onGraduated={onGraduated} />
+              <CurveBox
+                address={token.address}
+                symbol={token.symbol}
+                quote={token.quote}
+                graduation={token.graduation ?? 0}
+                taxPct={token.taxPct ?? 0}
+                onGraduated={onGraduated}
+              />
             )}
-            {token.isKindle && <CollectFees address={token.address} graduated={graduated} />}
+            {token.isKindle && token.quote && <CreatorPanel address={token.address} symbol={token.symbol} quote={token.quote} graduated={graduated} />}
             <p className="mt-4 text-xs leading-relaxed opacity-60">
               Anyone can launch a token on Kindle. Kindle doesn&apos;t vet tokens — check the contract address and do your
               own research before you buy.

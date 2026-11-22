@@ -9,7 +9,10 @@ export type TokenRow = {
   isKindle: boolean;
   graduated: boolean | null;
   progress: number | null;
-  raisedEth: number | null;
+  raised: number | null;
+  graduation: number | null;
+  quote: { address: string; symbol: string; decimals: number } | null;
+  taxPct: number | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;
