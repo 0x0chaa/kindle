@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPublicClient, createWalletClient, custom, defineChain, formatEther, http, parseEther, parseEventLogs, type Address } from "viem";
+import { createPublicClient, createWalletClient, custom, defineChain, formatEther, formatUnits, http, parseEventLogs, parseUnits, type Address } from "viem";
 import { Check, Loader2, Rocket } from "lucide-react";
 import { useApp } from "../Providers";
 import { WalletButton } from "../WalletButton";
@@ -9,7 +9,7 @@ import { TokenAvatar } from "../token/TokenAvatar";
 import { useAccount } from "@/lib/wallet-store";
 import { ensureChain, getWallet } from "@/lib/wallet";
 import { NETWORKS } from "@/lib/networks";
-import { FACTORY, FACTORY_ABI, GRADUATION_ETH, PROTOCOL_SHARE_BPS, POOL_FEE_PCT, SNIPE_WINDOW_S } from "@/lib/factory";
+import { CURVE_RAW, ERC20_ABI, ETH_ADDRESS, FACTORY, FACTORY_ABI, MAX_TAX_PCT, PROTOCOL_SHARE_BPS, POOL_FEE_PCT, SNIPE_WINDOW_S, VEST_YEARS, VIRTUAL_TOKENS_RAW, virtualQuote } from "@/lib/factory";
 
 const robinhood = defineChain({
   id: NETWORKS.robinhood.chainId,
@@ -22,6 +22,29 @@ const robinhood = defineChain({
 const errText = (e: unknown) =>
   typeof e === "string" ? e : e instanceof Error ? e.message : (e as { message?: string })?.message ?? "The launch failed.";
 
+type PairOpt = { address: string; symbol: string; decimals: number; graduation: bigint };
+const DEFAULT_PAIR: PairOpt = { address: ETH_ADDRESS, symbol: "ETH", decimals: 18, graduation: 42n * 10n ** 17n };
+
+/** Enabled pair assets from the factory (ETH first). */
+async function loadPairs(): Promise<PairOpt[]> {
+  if (!FACTORY) return [DEFAULT_PAIR];
+  const c = createPublicClient({ chain: robinhood, transport: http(NETWORKS.robinhood.rpc) });
+  const list = await c.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "pairList" });
+  const out = await Promise.all(
+    list.map(async (a) => {
+      const [enabled, graduation] = await c.readContract({ address: FACTORY!, abi: FACTORY_ABI, functionName: "pairs", args: [a] });
+      if (!enabled) return null;
+      if (a.toLowerCase() === ETH_ADDRESS) return { ...DEFAULT_PAIR, graduation };
+      const [sym, dec] = await Promise.all([
+        c.readContract({ address: a, abi: ERC20_ABI, functionName: "symbol" }),
+        c.readContract({ address: a, abi: ERC20_ABI, functionName: "decimals" }),
+      ]);
+      return { address: a.toLowerCase(), symbol: sym, decimals: Number(dec), graduation };
+    }),
+  );
+  return out.filter((x): x is PairOpt => !!x);
+}
+
 /** Launch a token through Kindle's own factory, from the user's own wallet. */
 export function LaunchForm() {
   const { navigate } = useApp();
@@ -31,6 +54,10 @@ export function LaunchForm() {
   const [image, setImage] = useState("");
   const [agree, setAgree] = useState(false);
   const [buyEth, setBuyEth] = useState("");
+  const [pairs, setPairs] = useState<PairOpt[]>([]);
+  const [pairAddr, setPairAddr] = useState<string>(ETH_ADDRESS);
+  const [taxPct, setTaxPct] = useState("0");
+  const [buybackPct, setBuybackPct] = useState("0");
   const [status, setStatus] = useState<"" | "signing" | "confirming" | "done">("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ address?: string; txHash?: string } | null>(null);
@@ -42,26 +69,28 @@ export function LaunchForm() {
       .readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "launchFee" })
       .then(setLaunchFee)
       .catch(() => {});
+    void loadPairs().then(setPairs).catch(() => {});
   }, []);
+  const pair = pairs.find((p) => p.address === pairAddr) ?? pairs[0] ?? DEFAULT_PAIR;
+  const isEth = pair.address === ETH_ADDRESS;
+  const tax = Math.max(0, Math.min(MAX_TAX_PCT, Number(taxPct) || 0));
+  const buybackShare = Math.max(0, Math.min(100, Number(buybackPct) || 0));
   const launchFeeText = launchFee ? ` plus a ${formatEther(launchFee)} ETH launch fee` : "";
 
   // Expected tokens for the creator's first buy on a fresh curve (no anti-snipe tax for the creator).
   const firstBuy = (() => {
-    const v = Number(buyEth);
-    if (!(v > 0)) return null;
-    let ethIn: bigint;
+    if (!(Number(buyEth) > 0)) return null;
+    let amountIn: bigint;
     try {
-      ethIn = parseEther(buyEth);
+      amountIn = parseUnits(buyEth, pair.decimals);
     } catch {
       return null;
     }
-    const net = ethIn - ethIn / 100n;
-    const V0 = 14n * 10n ** 17n;
-    const T0 = 1066666666666666666666666667n;
-    const CURVE = 800_000_000n * 10n ** 18n;
-    let out = (T0 * net) / (V0 + net);
-    if (out > CURVE) out = CURVE;
-    return { ethIn, out, pct: Number((out * 10000n) / (1_000_000_000n * 10n ** 18n)) / 100 };
+    const net = amountIn - amountIn / 100n - (amountIn * BigInt(Math.round(tax * 100))) / 10000n;
+    const v0 = virtualQuote(pair.graduation);
+    let out = (VIRTUAL_TOKENS_RAW * net) / (v0 + net);
+    if (out > CURVE_RAW) out = CURVE_RAW;
+    return { amountIn, out, pct: Number((out * 10000n) / (1_000_000_000n * 10n ** 18n)) / 100 };
   })();
 
   const imageOk = /^https:\/\/\S+$/.test(image.trim()) || /^ipfs:\/\/\S+$/.test(image.trim());
@@ -84,13 +113,43 @@ export function LaunchForm() {
       const publicClient = createPublicClient({ chain: robinhood, transport: http(NETWORKS.robinhood.rpc) });
       if (!FACTORY) throw new Error("Launching opens soon — the Kindle factory isn't live yet.");
       const fee = await publicClient.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "launchFee" });
+      const buyAmount = firstBuy?.amountIn ?? 0n;
+      if (!isEth && buyAmount > 0n) {
+        const allowance = await publicClient.readContract({
+          address: pair.address as Address,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [account as Address, FACTORY],
+        });
+        if (allowance < buyAmount) {
+          const { request: ap } = await publicClient.simulateContract({
+            account: account as Address,
+            address: pair.address as Address,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [FACTORY, buyAmount],
+          });
+          await publicClient.waitForTransactionReceipt({ hash: await wallet.writeContract(ap) });
+        }
+      }
       const { request } = await publicClient.simulateContract({
         account: account as Address,
         address: FACTORY,
         abi: FACTORY_ABI,
         functionName: "launch",
-        args: [name.trim(), symbol.trim().toUpperCase(), image.trim(), firstBuy ? (firstBuy.out * 95n) / 100n : 0n],
-        value: fee + (firstBuy?.ethIn ?? 0n),
+        args: [
+          {
+            name: name.trim(),
+            symbol: symbol.trim().toUpperCase(),
+            image: image.trim(),
+            quote: pair.address as Address,
+            taxBps: Math.round(tax * 100),
+            buybackBps: Math.round(buybackShare * 100),
+            buyAmount,
+            minTokensOut: firstBuy ? (firstBuy.out * 95n) / 100n : 0n,
+          },
+        ],
+        value: fee + (isEth ? buyAmount : 0n),
       });
       const txHash = await wallet.writeContract(request);
       setStatus("confirming");
@@ -176,8 +235,49 @@ export function LaunchForm() {
         </div>
       </label>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="block text-sm font-semibold">
+          Pair
+          <select
+            value={pair.address}
+            onChange={(e) => setPairAddr(e.target.value)}
+            className={`${field} mt-1 font-normal`}
+          >
+            {(pairs.length ? pairs : [DEFAULT_PAIR]).map((p) => (
+              <option key={p.address} value={p.address}>
+                {p.symbol}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-semibold">
+          Creator tax (0–{MAX_TAX_PCT}%)
+          <input
+            value={taxPct}
+            onChange={(e) => setTaxPct(e.target.value.replace(/[^0-9.]/g, ""))}
+            inputMode="decimal"
+            className={`${field} mt-1 font-normal`}
+          />
+        </label>
+        <label className="block text-sm font-semibold">
+          Auto-buyback (% of fees)
+          <input
+            value={buybackPct}
+            onChange={(e) => setBuybackPct(e.target.value.replace(/[^0-9.]/g, ""))}
+            inputMode="decimal"
+            className={`${field} mt-1 font-normal`}
+          />
+        </label>
+      </div>
+      <p className="-mt-2 text-xs opacity-70">
+        Pair: what {symbol.toUpperCase() || "your token"} trades against; it graduates when the curve has raised{" "}
+        {Number(formatUnits(pair.graduation, pair.decimals)).toLocaleString("en-US")} {pair.symbol}. Tax: extra % on every trade, all to
+        you, on the curve and in the pool. Auto-buyback: when fees are claimed, this share buys {symbol.toUpperCase() || "your token"} back
+        and locks it for {VEST_YEARS} years.
+      </p>
+
       <label className="block text-sm font-semibold">
-        First buy (optional, ETH)
+        First buy (optional, {pair.symbol})
         <input
           value={buyEth}
           onChange={(e) => setBuyEth(e.target.value.replace(/[^0-9.]/g, ""))}
@@ -195,11 +295,12 @@ export function LaunchForm() {
       <ul className="space-y-1 rounded-2xl bg-peach/60 p-4 text-sm">
         <li>• 1,000,000,000 tokens. 800M are sold on a bonding curve; no team allocation.</li>
         <li>
-          • When the curve sells out (~{GRADUATION_ETH} ETH), the token graduates: the last 200M tokens and the ETH go into a Uniswap v4
-          pool, and the liquidity is locked forever.
+          • When the curve sells out, the token graduates: the last 200M tokens and the {pair.symbol} raised go into a Uniswap v4 pool,
+          and the liquidity is locked forever.
         </li>
         <li>
-          • Every trade pays {POOL_FEE_PCT}%: {100 - PROTOCOL_SHARE_BPS / 100}% goes to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle.
+          • Every trade pays {POOL_FEE_PCT}% ({100 - PROTOCOL_SHARE_BPS / 100}% to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle)
+          {tax > 0 ? ` plus your ${tax}% tax` : ""}. Your fees wait in escrow until you claim them.
         </li>
         <li>• Buyers in the first {SNIPE_WINDOW_S} seconds pay an anti-snipe tax that falls to 0 — it stops bots grabbing your launch.</li>
         <li>• You pay gas{launchFeeText}. Your wallet shows the total before you sign.</li>

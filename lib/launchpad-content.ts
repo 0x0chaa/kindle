@@ -9,22 +9,22 @@ export const fees: { title: string; value: string; text: string }[] = [
   {
     title: "Trading fee",
     value: "1%",
-    text: "Every trade pays 1%, on the bonding curve and in the Uniswap v4 pool after graduation. There is no extra tax.",
+    text: "Every trade pays 1%, on the bonding curve and in the Uniswap v4 pool after graduation: 70% to the creator, 30% to Kindle.",
   },
   {
-    title: "Creator share",
-    value: "70%",
-    text: "70% of every fee goes to the token's creator, in ETH. Anyone can trigger the payout from the token page.",
+    title: "Creator tax",
+    value: "0–10%",
+    text: "Creators can add their own tax at launch. It's charged on every trade, on the curve and in the pool, and goes entirely to the creator.",
   },
   {
-    title: "Kindle share",
-    value: "30%",
-    text: "30% of every fee goes to Kindle's treasury. It's fixed in the factory contract and can't be raised.",
+    title: "Pairs",
+    value: "ETH +",
+    text: "Tokens trade against ETH or another approved asset, such as a tokenized stock or a stablecoin. Fees are paid in that asset.",
   },
   {
-    title: "Graduation",
-    value: "~4.2 ETH",
-    text: "When the curve sells out, the token moves to Uniswap v4 with 200M tokens and the ETH raised, locked forever.",
+    title: "Buybacks",
+    value: "5 years",
+    text: "Creators can spend their fees buying their own token back. Bought-back tokens unlock evenly over five years.",
   },
   {
     title: "Anti-snipe",
@@ -51,8 +51,20 @@ export const faqs: { q: string; a: string }[] = [
     a: "For the first 5 seconds after a launch, buys pay a tax that starts at 99% and drops to 0. The creator's own first buy, made in the launch transaction, is exempt.",
   },
   {
+    q: "What is the creator tax?",
+    a: "An optional extra fee, from 0 to 10%, that a creator sets at launch. It applies to every buy and sell — on the curve and, after graduation, in the Uniswap v4 pool — and all of it goes to the creator. Check a token's tax on its page before you trade.",
+  },
+  {
+    q: "Can a token be paired with something other than ETH?",
+    a: "Yes. Creators can pick ETH or another asset Kindle has approved, such as a tokenized stock or a stablecoin. Buyers pay in that asset, graduation is measured in it, and fees are paid in it. Tokens paired with a stock also move with that stock.",
+  },
+  {
+    q: "How do creator buybacks work?",
+    a: "Creators can use fees from escrow to buy their own token, either by hand or automatically with a share of every claim. Each buyback is locked and unlocks evenly over five years.",
+  },
+  {
     q: "What does it cost?",
-    a: "Launching costs 0.0005 ETH plus gas. Every trade pays 1%: 70% to the creator, 30% to Kindle.",
+    a: "Launching costs 0.0005 ETH plus gas. Every trade pays 1% (70% to the creator, 30% to Kindle) plus the creator's tax, if any.",
   },
   {
     q: "Is every token here safe?",
@@ -64,7 +76,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How do creators get paid?",
-    a: "On the token page: Claim creator fees while the token is on the curve, Collect fees after it graduates. Anyone can press it; the money always goes to the creator.",
+    a: "Fees collect in escrow. On the token page, Claim creator fees pays them out (after graduation, Sweep pool fees first moves the pool's fees into escrow). Anyone can press it; the money always goes to the creator.",
   },
 ];
 
@@ -110,7 +122,9 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "Fees",
     body: [
       "Launch: 0.0005 ETH plus gas (the owner can change it, at most 0.01 ETH; it's shown before you sign).",
-      "Trading: 1% on every trade, on the curve and in the pool, and no tax. 70% goes to the creator and 30% to Kindle's treasury.",
+      "Trading: 1% on every trade, on the curve and in the pool — 70% to the creator, 30% to Kindle's treasury — plus the creator's optional tax (0–10%, all to the creator). After graduation the total is the pool's LP fee.",
+      "Pairs: ETH by default, or an asset Kindle has approved (tokenized stocks, stablecoins). Graduation targets are set per pair.",
+      "Buybacks: creators can spend escrowed fees on their own token; each buyback unlocks linearly over five years.",
       "Anti-snipe: buys in the first 5 seconds after launch pay a tax that falls from 99% to 0 (paid to the treasury).",
     ],
   },

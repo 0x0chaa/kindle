@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FactoryDeploy } from "@/components/launch/FactoryDeploy";
+import { PairsAdmin } from "@/components/launch/PairsAdmin";
 
 export const metadata: Metadata = { title: "Deploy the Kindle factory", robots: { index: false } };
 
@@ -14,6 +15,7 @@ export default function FactoryPage() {
           address in Vercel as NEXT_PUBLIC_KINDLE_FACTORY and redeploy.
         </p>
         <FactoryDeploy />
+        <PairsAdmin />
       </div>
     </section>
   );
