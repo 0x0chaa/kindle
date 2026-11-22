@@ -49,7 +49,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <main>{children}</main>
           <Cursor />
         </Providers>
-        <div className="grain" aria-hidden />
       </body>
     </html>
   );
