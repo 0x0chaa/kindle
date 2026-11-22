@@ -75,16 +75,17 @@ export function Nav() {
         transition={{ duration: 0.9, ease: EASE_EXPO }}
         className="fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-[5vw] py-5 text-white mix-blend-difference"
       >
+        <span aria-hidden className="pointer-events-none absolute inset-x-[5vw] bottom-0 h-px bg-white/40" />
         <a
           href="/"
           onClick={(e) => {
             e.preventDefault();
             go("/#top");
           }}
-          className="display inline-flex items-center gap-2 text-2xl tracking-[-0.06em]"
+          className="display inline-flex items-center gap-2.5 text-[2rem] tracking-[-0.06em] md:text-[2.4rem]"
           aria-label="Kindle — home"
         >
-          <svg viewBox="0 0 100 100" className="size-7 shrink-0" aria-hidden="true">
+          <svg viewBox="0 0 100 100" className="size-9 shrink-0 md:size-10" aria-hidden="true">
             <path d="M52 4C58 26 80 36 80 62c0 19-14 32-30 32S20 81 20 62c0-14 8-22 14-28 2 10 8 14 12 14C42 30 44 16 52 4Z" fill="#ccff00" />
             <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" fill="#0b0b0b" />
           </svg>
