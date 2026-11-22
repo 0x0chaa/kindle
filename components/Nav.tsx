@@ -14,10 +14,10 @@ import { WalletButton } from "./WalletButton";
 const links = [
   { label: "Introduction", href: "/about#about" },
   { label: "How it works", href: "/about#how-it-works" },
-  { label: "Tokens", href: "/#tokens", bar: true },
-  { label: "Fees", href: "/about#fees", bar: true },
+  { label: "Tokens", href: "/#tokens" },
+  { label: "Fees", href: "/about#fees" },
   { label: "FAQ", href: "/about#faq" },
-  { label: "Docs", href: "/docs", bar: true },
+  { label: "Docs", href: "/docs" },
 ];
 
 function RollLabel({ children }: { children: string }) {
