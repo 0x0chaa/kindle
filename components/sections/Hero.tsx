@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Rocket } from "lucide-react";
 import { TokenCA } from "../TokenCA";
 import { HeroArt } from "../HeroArt";
 import { KINDLE_BUY_URL, KINDLE_SYMBOL } from "@/lib/token";
@@ -83,6 +84,12 @@ export function Hero() {
             Robinhood Chain
           </h1>
           <p className="kh-lead">A meme, a community, an idea: Kindle gives it a token, a locked pool and a market in one transaction.</p>
+          <Link
+            href="/launch"
+            className="mt-6 inline-flex h-12 items-center gap-2 rounded-full bg-coral px-6 text-sm font-bold text-[#0b0b0b] shadow-[0_0_24px_rgba(204,255,0,0.35)]"
+          >
+            <Rocket className="size-4" /> Launch a token
+          </Link>
           {KINDLE_BUY_URL && (
             <a className="kh-link mt-5 inline-block" href={KINDLE_BUY_URL} target="_blank" rel="noreferrer">
               Buy ${KINDLE_SYMBOL}

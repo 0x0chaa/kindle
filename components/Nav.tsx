@@ -15,7 +15,6 @@ const links = [
   { label: "Introduction", href: "/about#about" },
   { label: "How it works", href: "/about#how-it-works" },
   { label: "Tokens", href: "/#tokens", bar: true },
-  { label: "Launch", href: "/launch", bar: true },
   { label: "Fees", href: "/about#fees", bar: true },
   { label: "FAQ", href: "/about#faq" },
   { label: "Docs", href: "/docs", bar: true },

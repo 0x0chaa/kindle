@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Rocket, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useApp } from "../Providers";
 import { FadeIn, SplitText } from "../Text";
 import { TokenAvatar } from "../token/TokenAvatar";
@@ -69,16 +69,6 @@ export function TokenBoard() {
               className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
           </form>
-          <a
-            href="/launch"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate("/launch");
-            }}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-coral px-5 text-sm font-semibold text-[#0b0b0b]"
-          >
-            <Rocket className="size-4" /> Launch a token
-          </a>
         </FadeIn>
       </div>
 
