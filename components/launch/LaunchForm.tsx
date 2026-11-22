@@ -198,7 +198,6 @@ export function LaunchForm() {
           • When the curve sells out (~{GRADUATION_ETH} ETH), the token graduates: the last 200M tokens and the ETH go into a Uniswap v4
           pool, and the liquidity is locked forever.
         </li>
-        <li>• Until graduation the token trades only on Kindle&apos;s curve.</li>
         <li>
           • Every trade pays {POOL_FEE_PCT}%: {100 - PROTOCOL_SHARE_BPS / 100}% goes to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle.
         </li>

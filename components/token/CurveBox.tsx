@@ -169,8 +169,7 @@ export function CurveBox({ address, symbol, onGraduated }: { address: string; sy
         <div className="h-full rounded-full bg-coral" style={{ width: `${Math.min(100, progress)}%` }} />
       </div>
       <p className="mt-2 text-xs opacity-70">
-        {raised.toFixed(3)} / {GRADUATION_ETH} ETH raised. When the curve sells out, {symbol} graduates to a locked Uniswap v4 pool. Until
-        then it trades only here.
+        {raised.toFixed(3)} / {GRADUATION_ETH} ETH raised. When the curve sells out, {symbol} graduates to a locked Uniswap v4 pool.
       </p>
       {snipeBps > 0 && !isCreator && (
         <p className="mt-3 rounded-xl bg-[#c62828]/10 px-3 py-2 text-xs font-semibold text-[#c62828]">

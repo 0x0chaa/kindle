@@ -7,10 +7,11 @@ import "server-only";
 // open a new Uniswap v4 pool (ETH / token, 1%) at the curve's final price and become one full-range position
 // that the factory owns and can never remove (locked forever).
 //
-// Until graduation the token can only move to or from the factory, and the pool doesn't exist yet: its tick spacing
-// is picked from the previous block hash at graduation, so nobody can create it or set its price in advance.
-// Every trade pays 1% (curve and pool): 70% to the creator, 30% to Kindle. New launches start with an anti-snipe tax
-// that falls from 98% to 0 over the first 5 seconds (the creator's own launch-buy is exempt).
+// Tokens are freely transferable from the start. The graduation pool doesn't exist until graduation: its tick spacing
+// is picked from the previous block hash at that moment, so nobody can create it or set its price in advance.
+// Every trade pays 1% (curve and pool): 70% to the creator, 30% to Kindle. Launching costs 0.0005 ETH (owner can
+// change it, max 0.01). New launches start with an anti-snipe tax that falls from ~99% to 0 over the first 5 seconds
+// (the creator's own launch-buy is exempt).
 export const FACTORY_SOURCE = String.raw`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
@@ -48,7 +49,7 @@ contract KindleToken {
     uint256 public immutable totalSupply;
     address public immutable creator;
     address public immutable factory;
-    bool public tradable;
+    bool public graduated;
 
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -93,18 +94,17 @@ contract KindleToken {
         return true;
     }
 
-    /// Bonding-curve sells: the factory takes back what the seller sells. Only before graduation.
+    /// Bonding-curve sells: the factory takes back what the seller sells (no approval needed). Only before graduation.
     function curvePull(address from, uint256 amount) external onlyFactory {
-        require(!tradable, "graduated");
+        require(!graduated, "graduated");
         _move(from, factory, amount);
     }
 
-    function enableTrading() external onlyFactory {
-        tradable = true;
+    function markGraduated() external onlyFactory {
+        graduated = true;
     }
 
     function _move(address from, address to, uint256 amount) private {
-        if (!tradable) require(from == factory || to == factory, "not graduated");
         uint256 bal = balanceOf[from];
         require(bal >= amount, "balance");
         unchecked {
@@ -161,7 +161,7 @@ contract KindleFactory {
     uint256 public constant VIRTUAL_ETH = 1.4 ether;
     uint256 public constant VIRTUAL_TOKENS = 1066666666666666666666666667;
     uint256 public constant FEE_BPS = 100;
-    uint256 public constant SNIPE_MAX_BPS = 9800;
+    uint256 public constant SNIPE_MAX_BPS = 9890;
     uint256 public constant SNIPE_WINDOW = 5;
     uint24 public constant POOL_FEE = 10000;
     int24 private constant MAX_TICK = 887272;
@@ -206,6 +206,7 @@ contract KindleFactory {
         treasury = treasury_;
         protocolShareBps = protocolShareBps_;
         owner = msg.sender;
+        launchFee = 0.0005 ether;
     }
 
     receive() external payable {
@@ -325,7 +326,7 @@ contract KindleFactory {
     function _graduate(address token, Launch storage l) private {
         l.graduated = true;
         _openPool(token);
-        KindleToken(token).enableTrading();
+        KindleToken(token).markGraduated();
         _ethUsed = 0;
         poolManager.unlock(abi.encode(ADD, token));
         uint256 used = _ethUsed;

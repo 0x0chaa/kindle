@@ -3,8 +3,8 @@
 export const fees: { title: string; value: string; text: string }[] = [
   {
     title: "Launching",
-    value: "Gas only",
-    text: "You pay Robinhood Chain gas. Kindle charges no launch fee today — if that changes, your wallet shows it before you sign.",
+    value: "0.0005 ETH",
+    text: "A flat 0.0005 ETH launch fee plus Robinhood Chain gas. Your wallet shows the total before you sign.",
   },
   {
     title: "Trading fee",
@@ -29,7 +29,7 @@ export const fees: { title: string; value: string; text: string }[] = [
   {
     title: "Anti-snipe",
     value: "5 s",
-    text: "Buys in the first seconds after launch pay a tax that falls from 98% to 0, so bots can't grab a launch.",
+    text: "Buys in the first seconds after launch pay a tax that falls from 99% to 0, so bots can't grab a launch.",
   },
 ];
 
@@ -44,19 +44,15 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "What happens at graduation?",
-    a: "In the same transaction, the last 200M tokens and the ETH the curve raised are added to a Uniswap v4 pool as one full-range position that Kindle's factory owns and can never remove. The token is then free to trade anywhere.",
-  },
-  {
-    q: "Why can't I send my tokens before graduation?",
-    a: "Until a token graduates it can only be bought from or sold back to the curve. That stops anyone from opening a pool early at a fake price. Transfers open automatically at graduation.",
+    a: "In the same transaction, the last 200M tokens and the ETH the curve raised are added to a Uniswap v4 pool as one full-range position that Kindle's factory owns and can never remove. From then on it trades in that pool on any Uniswap v4 app.",
   },
   {
     q: "What is the anti-snipe tax?",
-    a: "For the first 5 seconds after a launch, buys pay a tax that starts at 98% and drops to 0. The creator's own first buy, made in the launch transaction, is exempt.",
+    a: "For the first 5 seconds after a launch, buys pay a tax that starts at 99% and drops to 0. The creator's own first buy, made in the launch transaction, is exempt.",
   },
   {
     q: "What does it cost?",
-    a: "Launching costs gas. Every trade pays 1%: 70% to the creator, 30% to Kindle.",
+    a: "Launching costs 0.0005 ETH plus gas. Every trade pays 1%: 70% to the creator, 30% to Kindle.",
   },
   {
     q: "Is every token here safe?",
@@ -113,9 +109,9 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     id: "fees",
     title: "Fees",
     body: [
-      "Launch: gas only (the owner can add a launch fee of at most 0.01 ETH; it's shown before you sign).",
+      "Launch: 0.0005 ETH plus gas (the owner can change it, at most 0.01 ETH; it's shown before you sign).",
       "Trading: 1% on every trade, on the curve and in the pool, and no tax. 70% goes to the creator and 30% to Kindle's treasury.",
-      "Anti-snipe: buys in the first 5 seconds after launch pay a tax that falls from 98% to 0 (paid to the treasury).",
+      "Anti-snipe: buys in the first 5 seconds after launch pay a tax that falls from 99% to 0 (paid to the treasury).",
     ],
   },
   {
