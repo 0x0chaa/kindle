@@ -39,7 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem("kindle:theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}`,
+            __html: `try{if(localStorage.getItem("kindle:theme")==="dark"){document.documentElement.dataset.theme="dark";document.documentElement.dataset.mode="dark"}}catch(e){}`,
           }}
         />
       </head>

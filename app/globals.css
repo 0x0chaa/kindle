@@ -48,10 +48,13 @@ html[data-theme="dark"] {
   --color-blush: #2a3300;
   color-scheme: dark;
 }
-html[data-theme="dark"][data-mode="light"] {
+html[data-theme="dark"] {
   --bg: #0d0e0f;
   --fg: #f2f2ec;
 }
+html[data-theme="dark"] .text-\[\#0a8f4a\] { color: #7ee2a0; }
+html[data-theme="dark"] .text-\[\#c62828\] { color: #ff7a7a; }
+html[data-theme="dark"] .text-\[\#3d7a00\] { color: #ccff00; }
 body {
   background: var(--bg);
   color: var(--fg);

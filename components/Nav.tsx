@@ -74,9 +74,9 @@ export function Nav() {
         initial={{ y: -110 }}
         animate={{ y: !ready ? -110 : 0 }}
         transition={{ duration: 0.9, ease: EASE_EXPO }}
-        className="absolute inset-x-0 top-0 z-[60] flex items-center justify-between px-[5vw] py-5 text-white mix-blend-difference"
+        className="absolute inset-x-0 top-0 z-[60] flex items-center justify-between bg-[var(--bg)] px-[5vw] py-5 text-[var(--fg)] transition-colors duration-500"
       >
-        <span aria-hidden className="pointer-events-none absolute inset-x-[5vw] bottom-0 h-px bg-white/40" />
+        <span aria-hidden className="pointer-events-none absolute inset-x-[5vw] bottom-0 h-px bg-current opacity-20" />
         <a
           href="/"
           onClick={(e) => {
@@ -90,7 +90,7 @@ export function Nav() {
             <path d="M52 4C58 26 80 36 80 62c0 19-14 32-30 32S20 81 20 62c0-14 8-22 14-28 2 10 8 14 12 14C42 30 44 16 52 4Z" fill="#ccff00" />
             <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" fill="#0b0b0b" />
           </svg>
-          <TextScanner text="Kindle" duration={2.8} inkColor="#ffffff" accentColor="var(--primary)" className="display" />
+          <span className="display">Kindle</span>
         </a>
 
         <nav aria-label="Primary" className="hidden items-center gap-9 text-sm md:flex">
@@ -111,7 +111,7 @@ export function Nav() {
 
         <div className="flex items-center gap-3">
           <Magnetic className="hidden md:inline-block">
-            <WalletButton tone="light" className="border-white/40" />
+            <WalletButton tone="light" className="border-current/30" />
           </Magnetic>
           <ThemeToggle />
           <button
@@ -120,18 +120,18 @@ export function Nav() {
             aria-expanded={open}
             aria-controls="menu"
             aria-label={open ? "Close menu" : "Open menu"}
-            className="relative grid size-11 place-items-center rounded-full border border-white/40"
+            className="relative grid size-11 place-items-center rounded-full border border-current/30"
           >
             <span
-              className="absolute h-px w-5 bg-white transition-transform duration-500 ease-out-expo"
+              className="absolute h-px w-5 bg-current transition-transform duration-500 ease-out-expo"
               style={{ transform: open ? "rotate(45deg)" : "translateY(-6px)" }}
             />
             <span
-              className="absolute h-px w-5 bg-white transition-opacity duration-300"
+              className="absolute h-px w-5 bg-current transition-opacity duration-300"
               style={{ opacity: open ? 0 : 1 }}
             />
             <span
-              className="absolute h-px w-5 bg-white transition-transform duration-500 ease-out-expo"
+              className="absolute h-px w-5 bg-current transition-transform duration-500 ease-out-expo"
               style={{ transform: open ? "rotate(-45deg)" : "translateY(6px)" }}
             />
           </button>

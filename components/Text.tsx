@@ -36,31 +36,10 @@ export function SplitText({
   const { ready, reduced } = useApp();
   const lines = Array.isArray(text) ? text : [text];
 
-  useGSAP(
-    () => {
-      if (reduced || !ref.current) return;
-      const targets = ref.current.querySelectorAll(".st");
-      if (trigger === "ready" && !ready) {
-        gsap.set(targets, { yPercent: 118 });
-        return;
-      }
-      gsap.fromTo(
-        targets,
-        { yPercent: 118, rotate: type === "chars" ? 7 : 4 },
-        {
-          yPercent: 0,
-          rotate: 0,
-          duration: 1.25,
-          ease: "expo.out",
-          stagger: type === "chars" ? 0.032 : 0.07,
-          delay,
-          scrollTrigger:
-            trigger === "scroll" ? { trigger: ref.current, start: "top 88%", once: true } : undefined,
-        },
-      );
-    },
-    { scope: ref, dependencies: [ready, reduced], revertOnUpdate: true },
-  );
+  void ready;
+  void reduced;
+  void trigger;
+  void delay;
 
   return (
     <Tag ref={ref} className={className} aria-label={lines.join(" ")}>
@@ -102,35 +81,7 @@ export function SplitText({
 /* ScrubText — words brighten as you scroll through the paragraph      */
 /* ------------------------------------------------------------------ */
 export function ScrubText({ text, className }: { text: string; className?: string }) {
-  const ref = useRef<HTMLParagraphElement>(null);
-  const { reduced } = useApp();
-
-  useGSAP(
-    () => {
-      if (reduced) return;
-      gsap.fromTo(
-        ".sw",
-        { opacity: 0.14 },
-        {
-          opacity: 1,
-          stagger: 0.1,
-          ease: "none",
-          scrollTrigger: { trigger: ref.current, start: "top 80%", end: "bottom 45%", scrub: true },
-        },
-      );
-    },
-    { scope: ref, dependencies: [reduced] },
-  );
-
-  return (
-    <p ref={ref} className={className}>
-      {text.split(" ").map((w, i) => (
-        <span key={i} className="sw">
-          {w}{" "}
-        </span>
-      ))}
-    </p>
-  );
+  return <p className={className}>{text}</p>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -147,17 +98,9 @@ export function FadeIn({
   delay?: number;
   y?: number;
 }) {
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -10% 0px" }}
-      transition={{ duration: 1, delay, ease: EASE_EXPO }}
-    >
-      {children}
-    </motion.div>
-  );
+  void delay;
+  void y;
+  return <div className={className}>{children}</div>;
 }
 
 /* ------------------------------------------------------------------ */

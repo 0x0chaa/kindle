@@ -17,6 +17,7 @@ export function ThemeToggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
     document.documentElement.dataset.theme = next;
+    document.documentElement.dataset.mode = next;
     try {
       localStorage.setItem("kindle:theme", next);
     } catch {}
@@ -28,7 +29,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       title={theme === "dark" ? "Light mode" : "Dark mode"}
-      className="grid size-11 place-items-center rounded-full border border-white/40"
+      className="grid size-11 place-items-center rounded-full border border-current/30"
     >
       {theme === "dark" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
     </button>

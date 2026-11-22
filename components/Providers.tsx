@@ -95,21 +95,10 @@ export function Providers({ children }: { children: ReactNode }) {
     }
   }, [ready, lenis]);
 
-  /* Section tone → html[data-mode] (drives the animated dark/light background) */
+  /* Light/dark comes from the theme toggle only — no colour changes while scrolling */
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLElement>("[data-tone]"));
-    if (els[0]) document.documentElement.dataset.mode = els[0].dataset.tone;
-    const triggers = els.map((el) =>
-      ScrollTrigger.create({
-        trigger: el,
-        start: "top 55%",
-        end: "bottom 55%",
-        onToggle: (self) => {
-          if (self.isActive) document.documentElement.dataset.mode = el.dataset.tone;
-        },
-      }),
-    );
-    return () => triggers.forEach((t) => t.kill());
+    const root = document.documentElement;
+    root.dataset.mode = root.dataset.theme === "dark" ? "dark" : "light";
   }, [pathname, ready]);
 
   const scrollTo = useCallback((target: string | number) => {
