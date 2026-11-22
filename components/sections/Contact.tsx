@@ -45,7 +45,7 @@ export function Contact() {
   const { navigate } = useApp();
 
   return (
-    <footer id="contact" data-tone="dark" className="relative border-t border-paper/10 bg-[#121214] px-[5vw] pb-10 pt-16 text-paper">
+    <footer id="contact" className="relative border-t border-current/10 bg-[var(--bg)] px-[5vw] pb-10 pt-16 text-[var(--fg)]">
       <a
         href="/"
         onClick={(e) => {
@@ -57,7 +57,7 @@ export function Contact() {
       >
         <svg viewBox="0 0 100 100" className="size-[0.95em]" aria-hidden="true">
           <path d="M52 4C58 26 80 36 80 62c0 19-14 32-30 32S20 81 20 62c0-14 8-22 14-28 2 10 8 14 12 14C42 30 44 16 52 4Z" fill="#ccff00" />
-          <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" fill="#121214" />
+          <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" style={{ fill: "var(--bg)" }} />
         </svg>
         Kindle
       </a>
@@ -79,7 +79,7 @@ export function Contact() {
                             navigate(i.href);
                           },
                         })}
-                    className="text-sm text-paper/60 transition-colors hover:text-paper"
+                    className="text-sm opacity-60 transition-opacity hover:opacity-100"
                   >
                     {i.label}
                   </a>
@@ -90,9 +90,9 @@ export function Contact() {
         ))}
       </nav>
 
-      <TokenCA tone="dark" className="mt-12 max-w-xl" />
+      <TokenCA className="mt-12 max-w-xl" />
 
-      <div className="mt-16 flex flex-col gap-2 border-t border-paper/10 pt-6 text-sm text-paper/45 md:flex-row md:justify-between">
+      <div className="mt-16 flex flex-col gap-2 border-t border-current/10 pt-6 text-sm opacity-50 md:flex-row md:justify-between">
         <span>© {new Date().getFullYear()} Kindle. Built on Uniswap v4, on Robinhood Chain.</span>
         <span>Not affiliated with Robinhood or Uniswap. Not financial advice.</span>
       </div>

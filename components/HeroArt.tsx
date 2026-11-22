@@ -18,12 +18,12 @@ export function HeroArt() {
     <svg className="kh-flame" viewBox="-40 -25 180 140" aria-hidden="true">
       <defs>
         <radialGradient id="kh-halo" cx="50%" cy="55%" r="50%">
-          <stop offset="0" stopColor="#ccff00" stopOpacity=".45" />
-          <stop offset=".55" stopColor="#ccff00" stopOpacity=".1" />
-          <stop offset="1" stopColor="#ccff00" stopOpacity="0" />
+          <stop offset="0" style={{ stopColor: "var(--flame)" }} stopOpacity=".45" />
+          <stop offset=".55" style={{ stopColor: "var(--flame)" }} stopOpacity=".1" />
+          <stop offset="1" style={{ stopColor: "var(--flame)" }} stopOpacity="0" />
         </radialGradient>
         <pattern id="kh-lines" width="100" height="0.9" patternUnits="userSpaceOnUse">
-          <rect width="100" height="0.55" fill="#ccff00" />
+          <rect width="100" height="0.55" style={{ fill: "var(--flame)" }} />
         </pattern>
         <linearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#fff" stopOpacity="1" />
@@ -38,10 +38,10 @@ export function HeroArt() {
         </filter>
       </defs>
       <ellipse cx="50" cy="58" rx="80" ry="72" fill="url(#kh-halo)" />
-      <path d={FLAME} fill="#ccff00" opacity=".55" filter="url(#kh-blur)" />
+      <path d={FLAME} style={{ fill: "var(--flame)" }} opacity=".55" filter="url(#kh-blur)" />
       <rect x="0" y="0" width="100" height="100" fill="url(#kh-lines)" mask="url(#kh-mask)" />
-      <path d={CORE} fill="#090a09" opacity=".85" />
-      <g fill="#ccff00">
+      <path d={CORE} style={{ fill: "var(--bg)" }} opacity=".85" />
+      <g style={{ fill: "var(--flame)" }}>
         {embers.map((e, i) => (
           <circle key={i} cx={e.x} cy={e.y} r={e.s} opacity={e.o} />
         ))}

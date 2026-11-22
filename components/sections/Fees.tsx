@@ -20,9 +20,9 @@ export function Fees() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {fees.map((f, i) => (
           <FadeIn key={f.title} delay={(i % 3) * 0.08}>
-            <article className="h-full rounded-3xl border border-paper/10 bg-paper/[0.05] p-6">
+            <article className="h-full rounded-3xl border border-current/10 bg-paper p-6">
               <p className="text-sm opacity-60">{f.title}</p>
-              <p className="display mt-2 text-4xl text-mint">{f.value}</p>
+              <p className="display mt-2 text-4xl text-[#3d7a00]">{f.value}</p>
               <p className="mt-3 text-sm leading-relaxed opacity-75">{f.text}</p>
             </article>
           </FadeIn>

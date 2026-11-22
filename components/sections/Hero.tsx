@@ -43,7 +43,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section id="top" data-tone="dark" data-scene="hero" className="kh relative">
+    <section id="top" className="kh relative">
       <div className="kh-ticker" aria-label={ticker.length ? "Trending tokens" : "About Kindle"}>
         {/* two identical copies, slid left by exactly one copy, loop without a seam */}
         <div className="kh-track">
@@ -88,7 +88,7 @@ export function Hero() {
               Buy ${KINDLE_SYMBOL}
             </a>
           )}
-          <TokenCA tone="dark" className="mt-6 max-w-xl" />
+          <TokenCA className="mt-6 max-w-xl" />
         </div>
       </div>
 
