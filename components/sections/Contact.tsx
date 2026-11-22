@@ -52,10 +52,10 @@ export function Contact() {
           e.preventDefault();
           navigate("/#top");
         }}
-        className="mb-8 inline-flex items-center gap-3 text-[clamp(2.75rem,7vw,4.5rem)] font-bold leading-none tracking-[-0.04em]"
+        className="mb-8 inline-flex items-center gap-4 text-[clamp(4rem,13vw,8rem)] font-bold leading-none tracking-[-0.045em]"
         aria-label="Kindle — home"
       >
-        <svg viewBox="0 0 100 100" className="size-[0.95em]" aria-hidden="true">
+        <svg viewBox="0 0 100 100" className="size-[1em]" aria-hidden="true">
           <path d="M52 4C58 26 80 36 80 62c0 19-14 32-30 32S20 81 20 62c0-14 8-22 14-28 2 10 8 14 12 14C42 30 44 16 52 4Z" fill="#ccff00" />
           <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" style={{ fill: "var(--bg)" }} />
         </svg>
