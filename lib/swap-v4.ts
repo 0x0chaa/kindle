@@ -13,6 +13,7 @@ import {
   type PublicClient,
 } from "viem";
 import { NETWORKS, type NetworkId } from "./networks";
+import { FACTORY, FACTORY_ABI } from "./factory";
 
 // Uniswap v4 on Robinhood Chain (addresses from Uniswap's official v4 deployments page). Mainnet only.
 const V4: Partial<Record<NetworkId, { poolManager: Address; quoters: Address[]; stateView: Address; router: Address }>> = {
@@ -77,6 +78,18 @@ function poolId(k: PoolKey): Hex {
       [k.currency0, k.currency1, k.fee, k.tickSpacing, k.hooks],
     ),
   );
+}
+
+/** A graduated Kindle token's pool, straight from the factory (its tick spacing is picked at graduation). */
+async function poolFromFactory(c: PublicClient, token: Address): Promise<PoolKey[]> {
+  if (!FACTORY) return [];
+  try {
+    const k = await c.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "poolKeyOf", args: [token] });
+    if (!k || k.tickSpacing === 0) return [];
+    return [{ currency0: k.currency0, currency1: k.currency1, fee: k.fee, tickSpacing: k.tickSpacing, hooks: k.hooks }];
+  } catch {
+    return [];
+  }
 }
 
 /** Pools the token was launched with (Kindle's factory creates the pool in the token's creation transaction). */
@@ -194,7 +207,8 @@ export async function swapQuoteV4(args: {
   // The "project" token is the side that isn't ETH/WETH; look for its pools.
   const target = isEthLike(tin) ? tout : tin;
   const other = target === tin ? tout : tin;
-  let pools = await poolsFromCreation(c, net, target.address);
+  let pools = await poolFromFactory(c, target.address);
+  if (!pools.length) pools = await poolsFromCreation(c, net, target.address);
   if (!pools.length) {
     const pairs: Address[] = isEthLike(other) ? [NATIVE, WETH] : [other.address];
     pools = (await Promise.all(pairs.map((p) => poolsByProbe(c, net, target.address, p)))).flat();

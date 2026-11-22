@@ -2,12 +2,13 @@ import "server-only";
 
 // Kindle's launch factory for Robinhood Chain (v2: bonding curve). Unaudited: get it audited before promoting it widely.
 //
-// launch(): creates a fixed-supply ERC-20 (1B), and initializes its Uniswap v4 pool (ETH / token, 1%) at the price
-// the curve will end at. 800M tokens are sold on a constant-product bonding curve with virtual reserves; the last
+// launch(): creates a fixed-supply ERC-20 (1B). 800M tokens are sold on a constant-product bonding curve with virtual reserves; the last
 // buy that empties the curve "graduates" the token: the 200M reserved tokens and the ~4.2 ETH the curve collected
-// become one full-range position that the factory owns and can never remove (locked forever).
+// open a new Uniswap v4 pool (ETH / token, 1%) at the curve's final price and become one full-range position
+// that the factory owns and can never remove (locked forever).
 //
-// Until graduation the token can only move to or from the factory, so nobody can trade or seed the v4 pool early.
+// Until graduation the token can only move to or from the factory, and the pool doesn't exist yet: its tick spacing
+// is picked from the previous block hash at graduation, so nobody can create it or set its price in advance.
 // Every trade pays 1% (curve and pool): 70% to the creator, 30% to Kindle. New launches start with an anti-snipe tax
 // that falls from 98% to 0 over the first 5 seconds (the creator's own launch-buy is exempt).
 export const FACTORY_SOURCE = String.raw`// SPDX-License-Identifier: MIT
@@ -163,9 +164,7 @@ contract KindleFactory {
     uint256 public constant SNIPE_MAX_BPS = 9800;
     uint256 public constant SNIPE_WINDOW = 5;
     uint24 public constant POOL_FEE = 10000;
-    int24 public constant TICK_SPACING = 200;
-    int24 public constant TICK_LOWER = -887200;
-    int24 public constant TICK_UPPER = 887200;
+    int24 private constant MAX_TICK = 887272;
     uint160 public constant GRAD_SQRT_PRICE_X96 = 546726262810727612002490081201916;
     uint128 public constant GRAD_LIQUIDITY = 28953770738886498270290;
     address private constant DEAD = 0x000000000000000000000000000000000000dEaD;
@@ -174,6 +173,7 @@ contract KindleFactory {
 
     Launch[] private _launches;
     mapping(address => uint256) public indexPlusOne;
+    mapping(address => PoolKey) private _pools;
     uint256 private _ethUsed;
     uint256 private _locked = 1;
 
@@ -227,7 +227,6 @@ contract KindleFactory {
         require(nl > 0 && nl <= 40 && sl > 0 && sl <= 12 && bytes(image_).length <= 300, "metadata");
 
         token = address(new KindleToken(name_, symbol_, image_, msg.sender, SUPPLY));
-        poolManager.initialize(_key(token), GRAD_SQRT_PRICE_X96);
 
         _launches.push(Launch(token, msg.sender, msg.sender, uint64(block.timestamp), false, 0, 0, 0));
         indexPlusOne[token] = _launches.length;
@@ -325,16 +324,40 @@ contract KindleFactory {
 
     function _graduate(address token, Launch storage l) private {
         l.graduated = true;
+        _openPool(token);
         KindleToken(token).enableTrading();
         _ethUsed = 0;
         poolManager.unlock(abi.encode(ADD, token));
         uint256 used = _ethUsed;
         uint256 lpEth = l.realEth;
-        if (lpEth > used) protocolFees += lpEth - used;
+        require(used <= lpEth, "lp");
+        protocolFees += lpEth - used;
         l.realEth = 0;
         uint256 left = KindleToken(token).balanceOf(address(this));
         if (left > 0) KindleToken(token).transfer(DEAD, left);
-        emit Graduated(token, used, LP_SUPPLY - left, keccak256(abi.encode(_key(token))));
+        emit Graduated(token, used, LP_SUPPLY - left, keccak256(abi.encode(_pools[token])));
+    }
+
+    /// The pool is created only at graduation, with a tick spacing derived from the previous block hash, so
+    /// nobody can create it (or move its price) in advance. If that key is somehow taken, try the next spacing.
+    function _openPool(address token) private {
+        uint256 seed = uint256(keccak256(abi.encode(blockhash(block.number - 1), token, block.timestamp)));
+        int24 ts = int24(int256(60 + (seed % 16000)));
+        for (uint256 i = 0; i < 8; i++) {
+            PoolKey memory key = PoolKey(address(0), token, POOL_FEE, ts, address(0));
+            try poolManager.initialize(key, GRAD_SQRT_PRICE_X96) {
+                _pools[token] = key;
+                return;
+            } catch {
+                ts += 1;
+            }
+        }
+        revert("pool");
+    }
+
+    function _ticks(int24 ts) private pure returns (int24 lower, int24 upper) {
+        upper = (MAX_TICK / ts) * ts;
+        lower = -upper;
     }
 
     function unlockCallback(bytes calldata data) external returns (bytes memory) {
@@ -349,9 +372,10 @@ contract KindleFactory {
     }
 
     function _addLiquidity(PoolKey memory key, address token) private {
+        (int24 lower, int24 upper) = _ticks(key.tickSpacing);
         (int256 delta, ) = poolManager.modifyLiquidity(
             key,
-            ModifyLiquidityParams(TICK_LOWER, TICK_UPPER, int256(uint256(GRAD_LIQUIDITY)), bytes32(0)),
+            ModifyLiquidityParams(lower, upper, int256(uint256(GRAD_LIQUIDITY)), bytes32(0)),
             ""
         );
         int128 a0 = int128(delta >> 128);
@@ -378,7 +402,8 @@ contract KindleFactory {
     }
 
     function _collect(PoolKey memory key, address token) private returns (bytes memory) {
-        (int256 fees, ) = poolManager.modifyLiquidity(key, ModifyLiquidityParams(TICK_LOWER, TICK_UPPER, 0, bytes32(0)), "");
+        (int24 lower, int24 upper) = _ticks(key.tickSpacing);
+        (int256 fees, ) = poolManager.modifyLiquidity(key, ModifyLiquidityParams(lower, upper, 0, bytes32(0)), "");
         uint256 eth = _positive(int128(fees >> 128));
         uint256 tok = _positive(int128(fees));
         address to = _launches[indexPlusOne[token] - 1].feeRecipient;
@@ -486,8 +511,9 @@ contract KindleFactory {
         return Info(l.token, l.creator, l.createdAt, l.graduated, l.sold, l.realEth, t.name(), t.symbol(), t.image());
     }
 
-    function poolKeyOf(address token) external pure returns (PoolKey memory) {
-        return _key(token);
+    /// The token's Uniswap v4 pool (all zero before graduation).
+    function poolKeyOf(address token) external view returns (PoolKey memory) {
+        return _pools[token];
     }
 
     // ------------------------------------------------------------------ internal
@@ -498,8 +524,8 @@ contract KindleFactory {
         return _launches[i - 1];
     }
 
-    function _key(address token) private pure returns (PoolKey memory) {
-        return PoolKey(address(0), token, POOL_FEE, TICK_SPACING, address(0));
+    function _key(address token) private view returns (PoolKey memory) {
+        return _pools[token];
     }
 
     function _positive(int128 v) private pure returns (uint256) {

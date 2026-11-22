@@ -39,6 +39,8 @@ export const FACTORY_ABI = parseAbi([
   "function quoteSell(address token, uint256 amount) view returns (uint256 ethOut, uint256 fee)",
   "struct Info { address token; address creator; uint64 createdAt; bool graduated; uint256 sold; uint256 realEth; string name; string symbol; string image; }",
   "function recent(uint256 offset, uint256 count) view returns (Info[])",
+  "struct PoolKey { address currency0; address currency1; uint24 fee; int24 tickSpacing; address hooks; }",
+  "function poolKeyOf(address token) view returns (PoolKey)",
   "event Launched(address indexed token, address indexed creator, string name, string symbol, string image)",
   "event Trade(address indexed token, address indexed trader, bool isBuy, uint256 eth, uint256 tokens, uint256 sold, uint256 realEth)",
   "event Graduated(address indexed token, uint256 eth, uint256 tokens, bytes32 poolId)",
