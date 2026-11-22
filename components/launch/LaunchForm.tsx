@@ -69,7 +69,7 @@ export function LaunchForm() {
         address: FACTORY,
         abi: FACTORY_ABI,
         functionName: "launch",
-        args: [name.trim(), symbol.trim().toUpperCase(), image.trim()],
+        args: [name.trim(), symbol.trim().toUpperCase(), image.trim(), 0n],
         value: fee,
       });
       const txHash = await wallet.writeContract(request);
