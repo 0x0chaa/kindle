@@ -71,9 +71,9 @@ export function Nav() {
     <>
       <motion.header
         initial={{ y: -110 }}
-        animate={{ y: !ready || (hidden && !open) ? -110 : 0 }}
+        animate={{ y: !ready ? -110 : 0 }}
         transition={{ duration: 0.9, ease: EASE_EXPO }}
-        className="fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-[5vw] py-5 text-white mix-blend-difference"
+        className="absolute inset-x-0 top-0 z-[60] flex items-center justify-between px-[5vw] py-5 text-white mix-blend-difference"
       >
         <span aria-hidden className="pointer-events-none absolute inset-x-[5vw] bottom-0 h-px bg-white/40" />
         <a
