@@ -74,7 +74,7 @@ export function Nav() {
         initial={{ y: -110 }}
         animate={{ y: !ready ? -110 : 0 }}
         transition={{ duration: 0.9, ease: EASE_EXPO }}
-        className="absolute inset-x-0 top-0 z-[60] flex items-center justify-between bg-[var(--bg)] px-[5vw] py-5 text-[var(--fg)] transition-colors duration-500"
+        className={`absolute inset-x-0 top-0 z-[60] flex items-center justify-between px-[5vw] py-5 ${open ? "bg-[var(--fg)] text-[var(--bg)]" : "bg-[var(--bg)] text-[var(--fg)]"}`}
       >
         <span aria-hidden className="pointer-events-none absolute inset-x-[5vw] bottom-0 h-px bg-current opacity-20" />
         <a
@@ -150,9 +150,8 @@ export function Nav() {
             exit={{ clipPath: "circle(0% at 92% 4%)" }}
             transition={{ duration: 0.9, ease: EASE_QUART }}
             data-lenis-prevent
-            className="fixed inset-0 z-[55] flex flex-col justify-between gap-8 overflow-y-auto bg-[#0b0b0b] px-[5vw] pb-10 pt-28 text-white"
+            className="fixed inset-0 z-[55] flex flex-col justify-between gap-8 overflow-y-auto bg-[var(--fg)] px-[5vw] pb-10 pt-28 text-[var(--bg)]"
           >
-            <div className="aura" />
             <ul className="relative space-y-1">
               {links.map((l, i) => (
                 <li key={l.href} className="overflow-hidden">
@@ -168,7 +167,7 @@ export function Nav() {
                     transition={{ duration: 0.8, delay: 0.15 + i * 0.06, ease: EASE_EXPO }}
                     className="display flex items-baseline gap-4 text-[clamp(2.2rem,9.5vw,5rem)] leading-[1.05]"
                   >
-                    <span className="font-mono text-xs tracking-normal text-paper/40">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="font-mono text-xs tracking-normal opacity-40">{String(i + 1).padStart(2, "0")}</span>
                     {l.label}
                   </motion.a>
                 </li>
@@ -181,10 +180,10 @@ export function Nav() {
               className="relative space-y-4 text-sm"
             >
               <WalletButton tone="blue" />
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-paper/60">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 opacity-70">
                 {socials.map((s) =>
                   s.href ? (
-                    <a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="hover:text-paper">
+                    <a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="hover:opacity-100">
                       {s.label}
                     </a>
                   ) : (

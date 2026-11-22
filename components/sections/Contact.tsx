@@ -45,22 +45,7 @@ export function Contact() {
   const { navigate } = useApp();
 
   return (
-    <footer id="contact" className="relative border-t border-current/10 bg-[var(--bg)] px-[5vw] pb-8 pt-12 text-[var(--fg)]">
-      <a
-        href="/"
-        onClick={(e) => {
-          e.preventDefault();
-          navigate("/#top");
-        }}
-        className="mb-8 inline-flex items-center gap-4 text-[clamp(4rem,13vw,8rem)] font-bold leading-none tracking-[-0.045em]"
-        aria-label="Kindle — home"
-      >
-        <svg viewBox="0 0 100 100" className="size-[1em]" aria-hidden="true">
-          <path d="M52 4C58 26 80 36 80 62c0 19-14 32-30 32S20 81 20 62c0-14 8-22 14-28 2 10 8 14 12 14C42 30 44 16 52 4Z" fill="#ccff00" />
-          <path d="M50 92c-9 0-15-7-15-15 0-9 8-13 11-20 4 6 4 10 3 14 5-1 9-6 10-11 4 5 6 9 6 17 0 8-6 15-15 15Z" style={{ fill: "var(--bg)" }} />
-        </svg>
-        Kindle
-      </a>
+    <footer id="contact" className="relative border-t border-current/10 bg-[var(--bg)] px-[5vw] pb-8 pt-10 text-[var(--fg)]">
 
       <nav aria-label="Footer" className="grid max-w-3xl grid-cols-2 gap-x-6 gap-y-7 md:grid-cols-4">
         {columns.map((c) => (

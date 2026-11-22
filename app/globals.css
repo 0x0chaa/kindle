@@ -64,9 +64,6 @@ html[data-theme="dark"] .text-\[\#3d7a00\] { color: #ccff00; }
 body {
   background: var(--bg);
   color: var(--fg);
-  transition:
-    background-color 0.9s var(--ease-out-expo),
-    color 0.9s var(--ease-out-expo);
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -288,3 +285,7 @@ html.has-cursor button {
 .kh-link:hover{color:var(--accent-text)}
 .kh-foot{padding:8px max(5vw,16px) clamp(40px,6vw,72px);max-width:900px}
 .kh-foot p{margin:16px 0 0;color:color-mix(in srgb,var(--fg) 60%,transparent);font-size:16px;line-height:1.6}
+
+/* Loader: the flame glows */
+.kindle-glow { filter: drop-shadow(0 0 18px rgba(204, 255, 0, 0.75)) drop-shadow(0 0 48px rgba(204, 255, 0, 0.35)); animation: kindle-flicker 1.4s ease-in-out infinite; }
+@keyframes kindle-flicker { 0%, 100% { filter: drop-shadow(0 0 18px rgba(204, 255, 0, 0.75)) drop-shadow(0 0 48px rgba(204, 255, 0, 0.35)); } 50% { filter: drop-shadow(0 0 26px rgba(204, 255, 0, 0.95)) drop-shadow(0 0 70px rgba(204, 255, 0, 0.5)); } }
