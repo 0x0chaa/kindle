@@ -27,14 +27,14 @@ export const howItWorks: {
   {
     n: "03",
     title: "Launch on Kindle",
-    desc: "One transaction creates the token through Kindle's factory and opens its Uniswap v4 pool.",
-    tags: ["Kindle factory", "Uniswap v4", "One tx"],
+    desc: "One transaction creates the token and opens its bonding curve. Add a first buy if you like.",
+    tags: ["Bonding curve", "Launch + buy", "One tx"],
     visual: "plan",
   },
   {
     n: "04",
-    title: "Liquidity from block one",
-    desc: "The supply is placed in the pool at launch and the liquidity can't be removed. No bonding curve, no migration.",
+    title: "Graduate to Uniswap v4",
+    desc: "When the curve sells out (~4.2 ETH), the token moves to a Uniswap v4 pool and the liquidity is locked forever.",
     tags: ["Locked liquidity", "No rug pull of LP", "Fair start"],
     visual: "guard",
   },
@@ -48,7 +48,7 @@ export const howItWorks: {
   {
     n: "06",
     title: "Earn creator rewards",
-    desc: "Every swap pays a 1% pool fee. 70% of it goes to the creator, 30% to Kindle.",
+    desc: "Every trade pays 1%. 70% of it goes to the creator, 30% to Kindle.",
     tags: ["Creator fees", "Paid in ETH", "On-chain"],
     visual: "review",
   },
@@ -59,7 +59,7 @@ export const needs = [
   { t: "A Robinhood Chain wallet", d: "Any self-custody wallet that works on Robinhood Chain. You keep the keys." },
   { t: "A little ETH", d: "For gas. Your wallet shows the total before you sign." },
   { t: "Name, ticker, image", d: "Your token's identity. Use a square image hosted on a public https link." },
-  { t: "Your community", d: "Liquidity is live from the first block — share the contract address from your own channels." },
+  { t: "Your community", d: "Help your token fill its curve and graduate — share the contract address from your own channels." },
 ];
 
 export const socials: { id: "x" | "telegram"; label: string; href: string | null }[] = [

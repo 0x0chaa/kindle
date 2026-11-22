@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ArrowLeft, Check, Copy, ExternalLink } from "lucide-react";
 import { useApp } from "../Providers";
 import { TokenAvatar } from "./TokenAvatar";
 import { SwapBox } from "./SwapBox";
 import { CollectFees } from "./CollectFees";
+import { CurveBox } from "./CurveBox";
 import type { TokenRow } from "./types";
 import { age, pct, usd } from "@/lib/format";
 import { NETWORKS } from "@/lib/networks";
@@ -14,6 +15,8 @@ import { cn } from "@/lib/utils";
 export function TokenView({ token }: { token: TokenRow }) {
   const { navigate } = useApp();
   const [copied, setCopied] = useState(false);
+  const [graduated, setGraduated] = useState(!token.isKindle || !!token.graduated);
+  const onGraduated = useCallback(() => setGraduated(true), []);
 
   const copy = async () => {
     try {
@@ -93,7 +96,7 @@ export function TokenView({ token }: { token: TokenRow }) {
             </div>
           ) : (
             <p className="rounded-3xl border border-ink/10 bg-paper p-6 text-sm opacity-75">
-              No chart yet — trading data appears a few minutes after the first trades.
+              {graduated ? "No chart yet — trading data appears a few minutes after the first trades." : "On the bonding curve: the price chart appears once the token graduates to Uniswap v4."}
             </p>
           )}
 
@@ -122,8 +125,12 @@ export function TokenView({ token }: { token: TokenRow }) {
 
         <aside className="lg:col-span-4">
           <div className="lg:sticky lg:top-28">
-            <SwapBox address={token.address} symbol={token.symbol} />
-            {token.isKindle && <CollectFees address={token.address} />}
+            {graduated ? (
+              <SwapBox address={token.address} symbol={token.symbol} />
+            ) : (
+              <CurveBox address={token.address} symbol={token.symbol} onGraduated={onGraduated} />
+            )}
+            {token.isKindle && <CollectFees address={token.address} graduated={graduated} />}
             <p className="mt-4 text-xs leading-relaxed opacity-60">
               Anyone can launch a token on Kindle. Kindle doesn&apos;t vet tokens — check the contract address and do your
               own research before you buy.

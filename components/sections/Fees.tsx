@@ -13,7 +13,7 @@ export function Fees() {
         </div>
         <FadeIn className="md:col-span-4">
           <p className="max-w-sm leading-relaxed opacity-70">
-            Launches cost only gas. Every swap pays a 1% pool fee — 70% to the creator, 30% to Kindle. No taxes.
+            Launches cost only gas. Every trade pays 1% — 70% to the creator, 30% to Kindle. No taxes.
           </p>
         </FadeIn>
       </div>

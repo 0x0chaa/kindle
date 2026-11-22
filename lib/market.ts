@@ -6,6 +6,7 @@ import { NETWORKS } from "./networks";
 
 // Token lists come from Kindle's own factory contract; prices, market caps and volume from DexScreener.
 const DEXSCREENER = "https://api.dexscreener.com";
+const WETH = "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73";
 
 /** A token "graduates" when its market cap passes this line (a milestone, not a contract migration). */
 export const GRADUATE_MCAP = Number(process.env.GRADUATE_MCAP_USD || 69_000);
@@ -22,6 +23,10 @@ export type TokenRow = {
   createdAt: string | null;
   creator: string | null;
   isKindle: boolean;
+  /** Bonding-curve state for Kindle launches (null for other tokens). */
+  graduated: boolean | null;
+  progress: number | null;
+  raisedEth: number | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;
@@ -104,39 +109,81 @@ function merge(row: TokenRow, p: Pair | undefined): TokenRow {
   };
 }
 
-type Info = { token: string; creator: string; createdAt: bigint; name: string; symbol: string; image: string };
+type Info = {
+  token: string;
+  creator: string;
+  createdAt: bigint;
+  graduated: boolean;
+  sold: bigint;
+  realEth: bigint;
+  name: string;
+  symbol: string;
+  image: string;
+};
 
 const rpc = () =>
   createPublicClient({ transport: http(process.env.ROBINHOOD_RPC_URL || NETWORKS.robinhood.rpc, { timeout: 12_000 }) });
 
-const rowOf = (t: Info): TokenRow => ({
-  address: t.token,
-  name: t.name || "Unknown",
-  symbol: t.symbol || "?",
-  image: /^(https|ipfs):\/\//.test(t.image) ? t.image.replace(/^ipfs:\/\//, "https://ipfs.io/ipfs/") : null,
-  createdAt: new Date(Number(t.createdAt) * 1000).toISOString(),
-  creator: t.creator,
-  isKindle: true,
-  priceUsd: null,
-  marketCap: null,
-  volume24h: null,
-  change24h: null,
-  liquidityUsd: null,
-  txns24h: null,
-  pairAddress: null,
-  dexUrl: null,
-  description: null,
-  websites: [],
-  socials: [],
-});
+// Curve constants (must match lib/factory-source.ts)
+const E18 = 10n ** 18n;
+const CURVE = 800_000_000n * E18;
+const V0 = 14n * 10n ** 17n;
+const T0 = 1066666666666666666666666667n;
+
+/** ETH/USD from DexScreener (WETH on Robinhood Chain), cached 60s. */
+let ethMemo: { at: number; usd: number | null } | null = null;
+async function ethUsd(): Promise<number | null> {
+  if (ethMemo && Date.now() - ethMemo.at < 60_000) return ethMemo.usd;
+  let usd: number | null = null;
+  try {
+    const pairs = (await getJson(`${DEXSCREENER}/tokens/v1/robinhood/${WETH}`, undefined, 60)) as Pair[];
+    const best = (Array.isArray(pairs) ? pairs : [])
+      .filter((p) => p.baseToken?.address?.toLowerCase() === WETH.toLowerCase())
+      .sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
+    usd = num(best?.priceUsd);
+  } catch {}
+  ethMemo = { at: Date.now(), usd };
+  return usd;
+}
+
+const rowOf = (t: Info, eth: number | null): TokenRow => {
+  const priceEth = Number(((V0 + t.realEth) * 10n ** 12n) / (T0 - t.sold)) / 1e12; // ETH per whole token
+  const priceUsd = !t.graduated && eth ? priceEth * eth : null;
+  return {
+    address: t.token,
+    name: t.name || "Unknown",
+    symbol: t.symbol || "?",
+    image: /^(https|ipfs):\/\//.test(t.image) ? t.image.replace(/^ipfs:\/\//, "https://ipfs.io/ipfs/") : null,
+    createdAt: new Date(Number(t.createdAt) * 1000).toISOString(),
+    creator: t.creator,
+    isKindle: true,
+    graduated: t.graduated,
+    progress: t.graduated ? 100 : Number((t.sold * 10000n) / CURVE) / 100,
+    raisedEth: t.graduated ? null : Number(t.realEth) / 1e18,
+    priceUsd,
+    marketCap: priceUsd ? priceUsd * 1e9 : null,
+    volume24h: null,
+    change24h: null,
+    liquidityUsd: null,
+    txns24h: null,
+    pairAddress: null,
+    dexUrl: null,
+    description: null,
+    websites: [],
+    socials: [],
+  };
+};
 
 /** Newest launches from Kindle's factory (up to 200), cached for 20 seconds per server instance. */
 let memo: { at: number; rows: TokenRow[] } | null = null;
 async function kindleLaunches(): Promise<TokenRow[]> {
   if (!FACTORY) return [];
   if (memo && Date.now() - memo.at < 20_000) return memo.rows;
-  const list = (await rpc().readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "recent", args: [0n, 200n] })) as readonly Info[];
-  memo = { at: Date.now(), rows: list.map(rowOf) };
+  const [list, eth] = await Promise.all([
+    rpc().readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "recent", args: [0n, 200n] }) as Promise<readonly Info[]>,
+    ethUsd(),
+  ]);
+  memo = { at: Date.now(), rows: list.map((t) => rowOf(t, eth)) };
   return memo.rows;
 }
 
@@ -153,12 +200,15 @@ export async function listTokens(tab: Tab): Promise<TokenRow[]> {
 
   if (tab === "new") rows.sort((a, b) => Date.parse(b.createdAt ?? "0") - Date.parse(a.createdAt ?? "0"));
   if (tab === "top") rows.sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
-  if (tab === "trending") rows.sort((a, b) => (b.volume24h ?? 0) - (a.volume24h ?? 0));
-  if (tab === "graduated") rows = rows.filter((r) => (r.marketCap ?? 0) >= GRADUATE_MCAP).sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
-  if (tab === "graduating")
+  // Trending: pool volume for graduated tokens, curve momentum (ETH raised) for the rest
+  if (tab === "trending")
+    rows.sort((a, b) => (b.volume24h ?? (b.raisedEth ?? 0) * 1000) - (a.volume24h ?? (a.raisedEth ?? 0) * 1000));
+  if (tab === "graduated")
     rows = rows
-      .filter((r) => (r.marketCap ?? 0) >= GRADUATING_FROM && (r.marketCap ?? 0) < GRADUATE_MCAP)
+      .filter((r) => (r.isKindle ? r.graduated : (r.marketCap ?? 0) >= GRADUATE_MCAP))
       .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
+  if (tab === "graduating")
+    rows = rows.filter((r) => r.isKindle && !r.graduated && (r.progress ?? 0) >= 50).sort((a, b) => (b.progress ?? 0) - (a.progress ?? 0));
   return rows.slice(0, 120);
 }
 
@@ -172,12 +222,18 @@ export async function getToken(address: string): Promise<TokenRow | null> {
         token: string;
         creator: string;
         createdAt: bigint;
+        graduated: boolean;
+        sold: bigint;
+        realEth: bigint;
       };
       const erc = parseAbi(["function name() view returns (string)", "function symbol() view returns (string)", "function image() view returns (string)"]);
       const [name, symbol, image] = await Promise.all(
         (["name", "symbol", "image"] as const).map((f) => c.readContract({ address: address as Address, abi: erc, functionName: f }) as Promise<string>),
       );
-      row = rowOf({ token: l.token, creator: l.creator, createdAt: l.createdAt, name, symbol, image });
+      row = rowOf(
+        { token: l.token, creator: l.creator, createdAt: l.createdAt, graduated: l.graduated, sold: l.sold, realEth: l.realEth, name, symbol, image },
+        await ethUsd(),
+      );
     } catch {
       // not a Kindle launch: still show it if DexScreener knows it
     }
@@ -193,6 +249,9 @@ export async function getToken(address: string): Promise<TokenRow | null> {
     createdAt: null,
     creator: null,
     isKindle: false,
+    graduated: null,
+    progress: null,
+    raisedEth: null,
     priceUsd: null,
     marketCap: null,
     volume24h: null,

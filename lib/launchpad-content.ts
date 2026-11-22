@@ -7,60 +7,60 @@ export const fees: { title: string; value: string; text: string }[] = [
     text: "You pay Robinhood Chain gas. Kindle charges no launch fee today — if that changes, your wallet shows it before you sign.",
   },
   {
-    title: "Pool fee",
+    title: "Trading fee",
     value: "1%",
-    text: "Every Kindle token trades in a Uniswap v4 pool with a 1% swap fee. There is no extra buy or sell tax.",
+    text: "Every trade pays 1%, on the bonding curve and in the Uniswap v4 pool after graduation. There is no extra tax.",
   },
   {
     title: "Creator share",
     value: "70%",
-    text: "70% of the pool fee goes to the token's creator, in ETH and in the token. Anyone can trigger the payout from the token page.",
+    text: "70% of every fee goes to the token's creator, in ETH. Anyone can trigger the payout from the token page.",
   },
   {
     title: "Kindle share",
     value: "30%",
-    text: "30% of the pool fee goes to Kindle's treasury. It's fixed in the factory contract and can't be raised.",
+    text: "30% of every fee goes to Kindle's treasury. It's fixed in the factory contract and can't be raised.",
   },
   {
-    title: "Liquidity",
-    value: "Locked",
-    text: "The whole supply goes into the pool at launch and the factory has no function to remove it.",
+    title: "Graduation",
+    value: "~4.2 ETH",
+    text: "When the curve sells out, the token moves to Uniswap v4 with 200M tokens and the ETH raised, locked forever.",
   },
   {
-    title: "Team tokens",
-    value: "0",
-    text: "No presale and no team allocation: creators buy from the pool like everyone else.",
+    title: "Anti-snipe",
+    value: "5 s",
+    text: "Buys in the first seconds after launch pay a tax that falls from 98% to 0, so bots can't grab a launch.",
   },
 ];
 
 export const faqs: { q: string; a: string }[] = [
   {
     q: "What is Kindle?",
-    a: "A friendly launchpad for Robinhood Chain. You can launch a token, browse new, top and trending Kindle tokens, open any token's page and swap it — always from your own wallet.",
+    a: "A token launchpad for Robinhood Chain. Launch a token in one transaction, trade it on its bonding curve, and watch it graduate to Uniswap v4 — always from your own wallet.",
   },
   {
-    q: "Whose contracts are these?",
-    a: "Kindle's own. One factory contract creates each token, opens its Uniswap v4 pool and locks the liquidity. The source is public and verified on Blockscout.",
+    q: "How does the bonding curve work?",
+    a: "800M of the 1B tokens are sold on a curve: every buy raises the price, every sell lowers it. When the curve sells out (about 4.2 ETH raised), the token graduates.",
   },
   {
-    q: "What does it cost to launch?",
-    a: "Robinhood Chain gas. Kindle charges no launch fee today; your wallet shows the total before you sign.",
+    q: "What happens at graduation?",
+    a: "In the same transaction, the last 200M tokens and the ETH the curve raised are added to a Uniswap v4 pool as one full-range position that Kindle's factory owns and can never remove. The token is then free to trade anywhere.",
   },
   {
-    q: "Why “Graduating” and “Graduated” instead of “migrating”?",
-    a: "Kindle tokens have no bonding curve: they trade in a Uniswap v4 pool from the first block, so there is nothing to migrate. Kindle uses a $69K market-cap milestone instead — Graduating tokens are getting close, Graduated tokens have passed it.",
+    q: "Why can't I send my tokens before graduation?",
+    a: "Until a token graduates it can only be bought from or sold back to the curve. That stops anyone from opening a pool early at a fake price. Transfers open automatically at graduation.",
   },
   {
-    q: "Can a creator pull the liquidity?",
-    a: "No. The whole supply is placed in the pool at launch and the liquidity belongs to the factory, which has no function to remove it.",
+    q: "What is the anti-snipe tax?",
+    a: "For the first 5 seconds after a launch, buys pay a tax that starts at 98% and drops to 0. The creator's own first buy, made in the launch transaction, is exempt.",
+  },
+  {
+    q: "What does it cost?",
+    a: "Launching costs gas. Every trade pays 1%: 70% to the creator, 30% to Kindle.",
   },
   {
     q: "Is every token here safe?",
     a: "No. Anyone can launch a token and Kindle doesn't vet them. Always check the contract address from the project's own channels and only trade what you can afford to lose.",
-  },
-  {
-    q: "How do swaps work?",
-    a: "Kindle finds the token's Uniswap v4 pool (or a v3 pool for other tokens), dry-runs the swap, shows the minimum you'll receive, and you sign in your wallet. Selling a token needs an approval for exactly the amount you sell — never unlimited.",
   },
   {
     q: "Which wallets work?",
@@ -68,11 +68,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How do creators get paid?",
-    a: "Swap fees build up in the pool. Press Collect fees on the token page and 70% is sent to the creator's wallet, 30% to Kindle. Anyone can press it; the money always goes to the creator.",
-  },
-  {
-    q: "Will my token show on GMGN and DexScreener?",
-    a: "Tokens with a pool and trades are picked up by trackers like DexScreener and GMGN automatically, usually within minutes of the first trades.",
+    a: "On the token page: Claim creator fees while the token is on the curve, Collect fees after it graduates. Anyone can press it; the money always goes to the creator.",
   },
 ];
 
@@ -90,8 +86,8 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "Launching a token",
     body: [
       "Open Launch, connect your wallet, enter a name, a ticker and an image link, and confirm one transaction.",
-      "Kindle's factory creates a token with a fixed supply of 1,000,000,000, opens a Uniswap v4 pool paired with ETH (1% fee) and places the full supply in it as single-sided liquidity, starting at a market cap of about 2 ETH. The factory owns that liquidity and has no way to remove it.",
-      "Your wallet is recorded as the creator and receives 70% of the pool fees. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
+      "Kindle's factory creates a token with a fixed supply of 1,000,000,000. 800M are sold on a bonding curve with virtual reserves (start price ≈ 0.0000000013 ETH, about 1.3 ETH fully diluted). You can add a first buy in the same transaction.",
+      "When the curve sells out (~4.2 ETH), the remaining 200M tokens and the ETH go into a Uniswap v4 pool (1% fee) owned by the factory, which has no way to remove it. Your wallet receives 70% of all fees. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
     ],
   },
   {
@@ -100,7 +96,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     body: [
       "New — launched on Kindle in the last 3 days, newest first.",
       "Top — highest market cap. Trending — highest 24-hour volume.",
-      "Graduating — tokens with a market cap between $20.7K and $69K. Graduated — tokens above $69K. These are milestones, not contract migrations.",
+      "Graduating — bonding curve more than half sold. Graduated — curve sold out and trading in the Uniswap v4 pool.",
       "Lists come from Kindle's factory contract on-chain; prices, market caps and volume from DexScreener, refreshed about every 30 seconds.",
     ],
   },
@@ -109,7 +105,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "Trading",
     body: [
       "The swap box on each token page buys with ETH or sells for ETH.",
-      "Quotes come from Uniswap's v3 quoter, or the v4 quoter for tokens that trade in v4 pools. Each swap is dry-run on Robinhood Chain before you sign.",
+      "Before graduation you trade on the bonding curve, directly against the factory. After graduation, quotes come from Uniswap's v4 quoter. Each trade is dry-run on Robinhood Chain before you sign.",
       "ETH swaps need one signature. Selling a token needs an exact-amount approval through Permit2 first, then the swap. Max slippage is up to you (0.5–5%).",
     ],
   },
@@ -118,7 +114,8 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "Fees",
     body: [
       "Launch: gas only (the owner can add a launch fee of at most 0.01 ETH; it's shown before you sign).",
-      "Trading: a 1% Uniswap v4 pool fee and no tax. 70% of it goes to the creator and 30% to Kindle's treasury, paid out by Collect fees on the token page.",
+      "Trading: 1% on every trade, on the curve and in the pool, and no tax. 70% goes to the creator and 30% to Kindle's treasury.",
+      "Anti-snipe: buys in the first 5 seconds after launch pay a tax that falls from 98% to 0 (paid to the treasury).",
     ],
   },
   {

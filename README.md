@@ -2,9 +2,9 @@
 
 A token launchpad on Robinhood Chain (chain ID 4663), with its own launch factory on Uniswap v4.
 
-- **Home** — editorial hero, live ticker and the token board (New, Top, Trending, Graduating, Graduated), 40 at a time with Read more. Graduating/Graduated are market-cap milestones (default $69K, `GRADUATE_MCAP_USD`): tokens have no bonding curve.
-- **Token pages** (`/token/[address]`) — stats, DexScreener chart, contract copy, links, a swap box (Uniswap v3, then the token's v4 pool, dry-run, signed in the user's wallet) and Collect fees.
-- **Launch** (`/launch`) — calls `launch(name, symbol, image)` on the factory from the user's wallet: fixed 1B supply, Uniswap v4 pool against ETH at a 1% fee, liquidity locked in the factory, fees 70% creator / 30% treasury.
+- **Home** — editorial hero, live ticker and the token board (New, Top, Trending, Graduating, Graduated), 40 at a time with Read more. Graduating = curve more than half sold, Graduated = curve sold out and trading on Uniswap v4.
+- **Token pages** (`/token/[address]`) — stats, DexScreener chart, contract copy, links, a bonding-curve buy/sell box with progress and live anti-snipe tax before graduation, the Uniswap v4 swap box after, and creator fee claims.
+- **Launch** (`/launch`) — calls `launch(name, symbol, image, minOut)` (optionally with a first buy) on the factory: fixed 1B supply, 800M sold on a virtual-reserve bonding curve, graduation at ~4.2 ETH into a full-range Uniswap v4 position locked in the factory, 1% fee on every trade (70% creator / 30% treasury), 5-second anti-snipe tax, transfers locked until graduation.
 - **Factory setup** (`/factory`) — the owner compiles (server-side, solc) and deploys the factory from their wallet, then sets `NEXT_PUBLIC_KINDLE_FACTORY`.
 - **About** (`/about`) — introduction, how it works, fees and FAQ. **Docs** (`/docs`).
 

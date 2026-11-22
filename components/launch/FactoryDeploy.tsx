@@ -95,8 +95,8 @@ export function FactoryDeploy() {
       ) : (
         <>
           <ul className="space-y-1 text-sm">
-            <li>• Pool: Uniswap v4, token / ETH, 1% fee, starting market cap ≈ 2 ETH.</li>
-            <li>• Swap fees: {100 - PROTOCOL_SHARE_BPS / 100}% to the creator, {PROTOCOL_SHARE_BPS / 100}% to the treasury below.</li>
+            <li>• Bonding curve: 800M tokens, graduates at ~4.2 ETH into a locked Uniswap v4 pool (token / ETH, 1%).</li>
+            <li>• Trading fees (1%): {100 - PROTOCOL_SHARE_BPS / 100}% to the creator, {PROTOCOL_SHARE_BPS / 100}% to the treasury below.</li>
             <li>• Launch fee starts at 0 (owner can set up to 0.01 ETH).</li>
             <li>• The contract is not audited. Get an audit before promoting it widely.</li>
           </ul>

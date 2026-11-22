@@ -21,7 +21,7 @@ export function About() {
           />
           <ScrubText
             className="mt-12 max-w-[26ch] text-[clamp(1.5rem,3vw,2.9rem)] font-medium leading-[1.15] tracking-tight md:mt-16"
-            text="Kindle is a friendly launchpad for Robinhood Chain. Tokens launch through Kindle’s own factory straight into a Uniswap v4 pool — no bonding curve, liquidity from the first block. To launch, you need just four things."
+            text="Kindle is a friendly launchpad for Robinhood Chain. Tokens launch on a fair bonding curve and graduate to a locked Uniswap v4 pool when it sells out. To launch, you need just four things."
           />
 
           <div className="mt-16 grid gap-8 border-t hairline pt-10 sm:grid-cols-2 xl:grid-cols-4">

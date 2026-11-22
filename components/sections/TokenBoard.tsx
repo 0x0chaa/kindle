@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 const TABS: { id: Tab; label: string; hint: string }[] = [
   { id: "new", label: "New", hint: "Launched in the last 3 days, newest first." },
   { id: "top", label: "Top", hint: "Highest market cap." },
-  { id: "trending", label: "Trending", hint: "Most trading volume in the last 24 hours." },
-  { id: "graduating", label: "Graduating", hint: "Young tokens closing in on the $69K market-cap milestone." },
-  { id: "graduated", label: "Graduated", hint: "Young tokens that passed the $69K market-cap milestone." },
+  { id: "trending", label: "Trending", hint: "Most trading: pool volume for graduated tokens, ETH raised on the curve for the rest." },
+  { id: "graduating", label: "Graduating", hint: "Bonding curve more than half sold — closing in on Uniswap v4." },
+  { id: "graduated", label: "Graduated", hint: "Curve sold out: trading in a locked Uniswap v4 pool." },
 ];
 
 export function TokenBoard() {
@@ -159,6 +159,17 @@ export function TokenBoard() {
                       {pct(t.change24h)}
                     </span>
                   </div>
+                  {t.isKindle &&
+                    (t.graduated ? (
+                      <span className="mt-2 inline-flex rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-[#0b0b0b]">Graduated</span>
+                    ) : (
+                      <div className="mt-2 flex items-center gap-2" title={`${(t.progress ?? 0).toFixed(1)}% of the curve sold`}>
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/10">
+                          <div className="h-full rounded-full bg-coral" style={{ width: `${Math.min(100, t.progress ?? 0)}%` }} />
+                        </div>
+                        <span className="font-mono text-[11px] opacity-70">{Math.floor(t.progress ?? 0)}%</span>
+                      </div>
+                    ))}
                 </div>
               </a>
             </li>

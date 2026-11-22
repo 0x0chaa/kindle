@@ -7,6 +7,9 @@ export type TokenRow = {
   createdAt: string | null;
   creator: string | null;
   isKindle: boolean;
+  graduated: boolean | null;
+  progress: number | null;
+  raisedEth: number | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;

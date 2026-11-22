@@ -12,11 +12,11 @@ const fmt = (n: number | null) => (n == null ? "–" : n >= 1e6 ? `$${(n / 1e6).
 // Shown in the ticker until there are tokens to list.
 const FACTS = [
   "Launch in one transaction",
-  "Liquidity locked forever",
-  "1% swap fee, no tax",
+  "Bonding curve → Uniswap v4",
+  "1% trading fee, no tax",
   "70% of fees to the creator",
-  "Uniswap v4 on Robinhood Chain",
-  "1,000,000,000 fixed supply",
+  "Graduates at ~4.2 ETH",
+  "Anti-snipe launches",
 ];
 
 /** Repeat a short list so one copy is always wider than the screen (no gap in the loop). */

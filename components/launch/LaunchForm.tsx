@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPublicClient, createWalletClient, custom, defineChain, formatEther, http, parseEventLogs, type Address } from "viem";
+import { createPublicClient, createWalletClient, custom, defineChain, formatEther, http, parseEther, parseEventLogs, type Address } from "viem";
 import { Check, Loader2, Rocket } from "lucide-react";
 import { useApp } from "../Providers";
 import { WalletButton } from "../WalletButton";
@@ -9,7 +9,7 @@ import { TokenAvatar } from "../token/TokenAvatar";
 import { useAccount } from "@/lib/wallet-store";
 import { ensureChain, getWallet } from "@/lib/wallet";
 import { NETWORKS } from "@/lib/networks";
-import { FACTORY, FACTORY_ABI, PROTOCOL_SHARE_BPS, POOL_FEE_PCT } from "@/lib/factory";
+import { FACTORY, FACTORY_ABI, GRADUATION_ETH, PROTOCOL_SHARE_BPS, POOL_FEE_PCT, SNIPE_WINDOW_S } from "@/lib/factory";
 
 const robinhood = defineChain({
   id: NETWORKS.robinhood.chainId,
@@ -30,6 +30,7 @@ export function LaunchForm() {
   const [symbol, setSymbol] = useState("");
   const [image, setImage] = useState("");
   const [agree, setAgree] = useState(false);
+  const [buyEth, setBuyEth] = useState("");
   const [status, setStatus] = useState<"" | "signing" | "confirming" | "done">("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ address?: string; txHash?: string } | null>(null);
@@ -43,6 +44,25 @@ export function LaunchForm() {
       .catch(() => {});
   }, []);
   const launchFeeText = launchFee ? ` plus a ${formatEther(launchFee)} ETH launch fee` : "";
+
+  // Expected tokens for the creator's first buy on a fresh curve (no anti-snipe tax for the creator).
+  const firstBuy = (() => {
+    const v = Number(buyEth);
+    if (!(v > 0)) return null;
+    let ethIn: bigint;
+    try {
+      ethIn = parseEther(buyEth);
+    } catch {
+      return null;
+    }
+    const net = ethIn - ethIn / 100n;
+    const V0 = 14n * 10n ** 17n;
+    const T0 = 1066666666666666666666666667n;
+    const CURVE = 800_000_000n * 10n ** 18n;
+    let out = (T0 * net) / (V0 + net);
+    if (out > CURVE) out = CURVE;
+    return { ethIn, out, pct: Number((out * 10000n) / (1_000_000_000n * 10n ** 18n)) / 100 };
+  })();
 
   const imageOk = /^https:\/\/\S+$/.test(image.trim()) || /^ipfs:\/\/\S+$/.test(image.trim());
   const valid = name.trim().length >= 2 && /^[A-Za-z0-9]{2,12}$/.test(symbol.trim()) && imageOk && agree;
@@ -69,8 +89,8 @@ export function LaunchForm() {
         address: FACTORY,
         abi: FACTORY_ABI,
         functionName: "launch",
-        args: [name.trim(), symbol.trim().toUpperCase(), image.trim(), 0n],
-        value: fee,
+        args: [name.trim(), symbol.trim().toUpperCase(), image.trim(), firstBuy ? (firstBuy.out * 95n) / 100n : 0n],
+        value: fee + (firstBuy?.ethIn ?? 0n),
       });
       const txHash = await wallet.writeContract(request);
       setStatus("confirming");
@@ -156,12 +176,33 @@ export function LaunchForm() {
         </div>
       </label>
 
+      <label className="block text-sm font-semibold">
+        First buy (optional, ETH)
+        <input
+          value={buyEth}
+          onChange={(e) => setBuyEth(e.target.value.replace(/[^0-9.]/g, ""))}
+          inputMode="decimal"
+          placeholder="0.0"
+          className={`${field} mt-1 font-normal`}
+        />
+        <span className="mt-1 block text-xs font-normal opacity-70">
+          {firstBuy
+            ? `≈ ${Math.floor(Number(firstBuy.out / 10n ** 18n)).toLocaleString("en-US")} ${symbol.toUpperCase() || "tokens"} (${firstBuy.pct}% of supply), bought in the same transaction — before anyone else, with no anti-snipe tax.`
+            : "Buy in the same transaction as the launch, before anyone else."}
+        </span>
+      </label>
+
       <ul className="space-y-1 rounded-2xl bg-peach/60 p-4 text-sm">
-        <li>• 1,000,000,000 tokens, all placed in a Uniswap v4 pool paired with ETH. No team allocation.</li>
-        <li>• The liquidity is locked forever — Kindle&apos;s factory has no function to remove it.</li>
+        <li>• 1,000,000,000 tokens. 800M are sold on a bonding curve; no team allocation.</li>
         <li>
-          • Every swap pays a {POOL_FEE_PCT}% pool fee: {100 - PROTOCOL_SHARE_BPS / 100}% of it goes to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle.
+          • When the curve sells out (~{GRADUATION_ETH} ETH), the token graduates: the last 200M tokens and the ETH go into a Uniswap v4
+          pool, and the liquidity is locked forever.
         </li>
+        <li>• Until graduation the token trades only on Kindle&apos;s curve.</li>
+        <li>
+          • Every trade pays {POOL_FEE_PCT}%: {100 - PROTOCOL_SHARE_BPS / 100}% goes to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle.
+        </li>
+        <li>• Buyers in the first {SNIPE_WINDOW_S} seconds pay an anti-snipe tax that falls to 0 — it stops bots grabbing your launch.</li>
         <li>• You pay gas{launchFeeText}. Your wallet shows the total before you sign.</li>
       </ul>
       {FACTORY ? (
