@@ -45,14 +45,14 @@ export function Contact() {
   const { navigate } = useApp();
 
   return (
-    <footer id="contact" className="relative border-t border-current/10 bg-[var(--bg)] px-[5vw] pb-10 pt-16 text-[var(--fg)]">
+    <footer id="contact" className="relative border-t border-current/10 bg-[var(--bg)] px-[5vw] pb-8 pt-12 text-[var(--fg)]">
       <a
         href="/"
         onClick={(e) => {
           e.preventDefault();
           navigate("/#top");
         }}
-        className="mb-12 inline-flex items-center gap-3 text-[clamp(2.75rem,7vw,4.5rem)] font-bold leading-none tracking-[-0.04em]"
+        className="mb-8 inline-flex items-center gap-3 text-[clamp(2.75rem,7vw,4.5rem)] font-bold leading-none tracking-[-0.04em]"
         aria-label="Kindle — home"
       >
         <svg viewBox="0 0 100 100" className="size-[0.95em]" aria-hidden="true">
@@ -62,11 +62,11 @@ export function Contact() {
         Kindle
       </a>
 
-      <nav aria-label="Footer" className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+      <nav aria-label="Footer" className="grid max-w-3xl grid-cols-2 gap-x-6 gap-y-7 md:grid-cols-4">
         {columns.map((c) => (
           <div key={c.title}>
-            <h3 className="mb-4 text-sm font-semibold">{c.title}</h3>
-            <ul className="space-y-3">
+            <h3 className="mb-2.5 text-sm font-semibold">{c.title}</h3>
+            <ul className="space-y-1.5">
               {c.items.map((i) => (
                 <li key={i.label}>
                   <a
@@ -90,9 +90,9 @@ export function Contact() {
         ))}
       </nav>
 
-      <TokenCA className="mt-12 max-w-xl" />
+      <TokenCA className="mt-8 max-w-xl" />
 
-      <div className="mt-16 flex flex-col gap-2 border-t border-current/10 pt-6 text-sm opacity-50 md:flex-row md:justify-between">
+      <div className="mt-10 flex flex-col gap-2 border-t border-current/10 pt-6 text-sm opacity-50 md:flex-row md:justify-between">
         <span>© {new Date().getFullYear()} Kindle. Built on Uniswap v4, on Robinhood Chain.</span>
         <span>Not affiliated with Robinhood or Uniswap. Not financial advice.</span>
       </div>
