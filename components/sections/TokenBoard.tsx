@@ -187,10 +187,6 @@ export function TokenBoard() {
           </button>
         </div>
       )}
-      <p className="mt-6 text-xs opacity-60">
-        Token data from Kindle&apos;s factory and DexScreener. Anyone can launch a token — always check the contract address and
-        do your own research.
-      </p>
     </section>
   );
 }
