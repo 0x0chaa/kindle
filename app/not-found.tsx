@@ -8,7 +8,7 @@ export default function NotFound() {
       <h1 className="display relative text-[clamp(3rem,12vw,12rem)]">
         Lost in <span className="text-chrome">space.</span>
       </h1>
-      <p className="relative mt-6 max-w-md opacity-70">This page doesn&apos;t exist — not even our agents could find it. Let&apos;s get you back home.</p>
+      <p className="relative mt-6 max-w-md opacity-70">This page doesn&apos;t exist. Let&apos;s get you back home.</p>
       <div className="relative mt-10">
         <Pill href="/" variant="light">
           Back home

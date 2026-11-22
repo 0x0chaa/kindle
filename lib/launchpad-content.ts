@@ -74,10 +74,6 @@ export const faqs: { q: string; a: string }[] = [
     q: "Will my token show on GMGN and DexScreener?",
     a: "Tokens with a pool and trades are picked up by trackers like DexScreener and GMGN automatically, usually within minutes of the first trades.",
   },
-  {
-    q: "What is Ask Kindle?",
-    a: "Kindle's AI agent. Ask it in plain words to check a wallet, explain a transaction or prepare a swap — it simulates everything first and you sign every step.",
-  },
 ];
 
 export const docs: { id: string; title: string; body: string[] }[] = [

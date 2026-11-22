@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { connectWallet, getWallet } from "./wallet";
 
-// One shared connected-wallet state for the whole site (nav, swap box, launch form, agent console).
+// One shared connected-wallet state for the whole site (nav, swap box, launch form).
 let account: string | null = null;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());

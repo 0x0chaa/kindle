@@ -18,7 +18,6 @@ const links = [
   { label: "Fees", href: "/about#fees", bar: true },
   { label: "FAQ", href: "/about#faq" },
   { label: "Docs", href: "/docs", bar: true },
-  { label: "Ask Kindle", href: "/run" },
 ];
 
 function RollLabel({ children }: { children: string }) {

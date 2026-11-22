@@ -23,7 +23,6 @@ const columns: { title: string; items: Item[] }[] = [
     items: [
       { label: "Launch", href: "/launch" },
       { label: "Tokens", href: "/#tokens" },
-      { label: "Ask Kindle", href: "/run" },
     ],
   },
   {

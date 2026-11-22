@@ -131,7 +131,7 @@ export function Providers({ children }: { children: ReactNode }) {
         scrollTo(hash ? `#${hash}` : 0);
         return;
       }
-      // same page, different query (e.g. another agent template): no curtain needed
+      // same page, different query (e.g. a filter): no curtain needed
       if (path.split("?")[0] === pathname) {
         router.push(path, { scroll: false });
         return;
