@@ -1,6 +1,7 @@
 "use client";
 
 import {
+import { KindleFlame } from "./KindleFlame";
   createContext,
   useCallback,
   useContext,
@@ -164,7 +165,7 @@ export function Providers({ children }: { children: ReactNode }) {
     animate(
       curtain.current,
       { clipPath: ["inset(0% 0% 0% 0%)", "inset(0% 0% 100% 0%)"] },
-      { duration: 0.85, delay: 0.25, ease: EASE_QUART },
+      { duration: 0.85, delay: 0.6, ease: EASE_QUART },
     ).then(() => {
       busy.current = false;
     });
@@ -178,13 +179,10 @@ export function Providers({ children }: { children: ReactNode }) {
         <div
           ref={curtain}
           aria-hidden
-          className="pointer-events-none fixed inset-0 z-[90] grid place-items-center bg-[#0b0b0b] text-white"
+          className="pointer-events-none fixed inset-0 z-[90] grid place-items-center bg-black text-white"
           style={{ clipPath: "inset(100% 0% 0% 0%)" }}
         >
-          <div className="aura" />
-          <span className="display relative text-[clamp(3rem,10vw,9rem)]">
-            Kindle
-          </span>
+          <KindleFlame id="kf-curtain" />
         </div>
       </MotionConfig>
     </Ctx.Provider>
