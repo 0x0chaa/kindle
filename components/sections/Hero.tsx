@@ -25,7 +25,7 @@ export function Hero() {
   }, []);
 
   return (
-    <section id="top" data-tone="dark" data-scene="hero" className="kh relative pt-[72px]">
+    <section id="top" data-tone="dark" data-scene="hero" className="kh relative pt-[104px] md:pt-[120px]">
       {ticker.length > 0 && (
         <div className="kh-ticker" aria-label="Trending tokens">
           {ticker.map((t) => (
