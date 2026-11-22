@@ -14,7 +14,7 @@ export function StepVisual({ kind }: { kind: StepVisualKind }) {
               <span className="caret ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 bg-mint" />
             </p>
             <div className="mt-4 flex justify-end">
-              <span className="rounded-full bg-gradient-to-r from-coral to-mint px-3 py-1 text-[11px] font-medium text-ink">Run</span>
+              <span className="rounded-full bg-gradient-to-r from-coral to-mint px-3 py-1 text-[11px] font-medium text-[#0b0b0b]">Run</span>
             </div>
           </div>
         </div>

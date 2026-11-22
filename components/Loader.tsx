@@ -50,7 +50,7 @@ export function Loader({ onDone }: { onDone: () => void }) {
   return (
     <div
       ref={root}
-      className="fixed inset-0 z-[100] flex flex-col justify-between bg-ink px-[5vw] py-8 text-paper"
+      className="fixed inset-0 z-[100] flex flex-col justify-between bg-[#0b0b0b] px-[5vw] py-8 text-white"
       style={{ clipPath: "inset(0% 0% 0% 0%)" }}
       role="status"
       aria-label="Loading"

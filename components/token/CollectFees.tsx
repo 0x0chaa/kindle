@@ -38,7 +38,7 @@ export function CollectFees({ address }: { address: string }) {
         sends what has built up — anyone can trigger it, the money always goes to the creator&apos;s wallet.
       </p>
       {account ? (
-        <button type="button" onClick={() => void run()} disabled={busy} className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-coral px-5 font-bold text-ink disabled:opacity-60">
+        <button type="button" onClick={() => void run()} disabled={busy} className="mt-3 inline-flex h-11 items-center gap-2 rounded-full bg-coral px-5 font-bold text-[#0b0b0b] disabled:opacity-60">
           {busy && <Loader2 className="size-4 animate-spin" />} Collect fees
         </button>
       ) : (

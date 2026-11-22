@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp } from "./Providers";
 import { Magnetic } from "./Magnetic";
@@ -112,6 +113,7 @@ export function Nav() {
           <Magnetic className="hidden md:inline-block">
             <WalletButton tone="light" className="border-white/40" />
           </Magnetic>
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -122,11 +124,15 @@ export function Nav() {
           >
             <span
               className="absolute h-px w-5 bg-white transition-transform duration-500 ease-out-expo"
-              style={{ transform: open ? "rotate(45deg)" : "translateY(-4px)" }}
+              style={{ transform: open ? "rotate(45deg)" : "translateY(-6px)" }}
+            />
+            <span
+              className="absolute h-px w-5 bg-white transition-opacity duration-300"
+              style={{ opacity: open ? 0 : 1 }}
             />
             <span
               className="absolute h-px w-5 bg-white transition-transform duration-500 ease-out-expo"
-              style={{ transform: open ? "rotate(-45deg)" : "translateY(4px)" }}
+              style={{ transform: open ? "rotate(-45deg)" : "translateY(6px)" }}
             />
           </button>
         </div>
@@ -144,7 +150,7 @@ export function Nav() {
             exit={{ clipPath: "circle(0% at 92% 4%)" }}
             transition={{ duration: 0.9, ease: EASE_QUART }}
             data-lenis-prevent
-            className="fixed inset-0 z-[55] flex flex-col justify-between gap-8 overflow-y-auto bg-ink px-[5vw] pb-10 pt-28 text-paper"
+            className="fixed inset-0 z-[55] flex flex-col justify-between gap-8 overflow-y-auto bg-[#0b0b0b] px-[5vw] pb-10 pt-28 text-white"
           >
             <div className="aura" />
             <ul className="relative space-y-1">

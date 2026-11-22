@@ -12,7 +12,7 @@ export function TokenAvatar({ src, symbol, className }: { src: string | null; sy
     // eslint-disable-next-line @next/next/no-img-element
     <img src={url} alt="" loading="lazy" onError={() => setBroken(true)} className={cn("rounded-2xl object-cover", className)} />
   ) : (
-    <span aria-hidden className={cn("grid place-items-center rounded-2xl bg-coral font-bold text-ink", className)}>
+    <span aria-hidden className={cn("grid place-items-center rounded-2xl bg-coral font-bold text-[#0b0b0b]", className)}>
       {symbol.slice(0, 2).toUpperCase()}
     </span>
   );

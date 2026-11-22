@@ -229,7 +229,7 @@ export function SwapBox({ address, symbol }: { address: string; symbol: string }
             type="button"
             onClick={() => void getQuote()}
             disabled={busy !== ""}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-ink disabled:opacity-60"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-[#0b0b0b] disabled:opacity-60"
           >
             {busy === "quote" && <Loader2 className="size-4 animate-spin" />} Get quote
           </button>

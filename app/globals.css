@@ -40,6 +40,18 @@ html[data-mode="light"] {
   --bg: #f3f6ea;
   --fg: #0b0b0b;
 }
+/* Dark theme (toggle in the navbar): light sections turn dark, ink and paper swap. */
+html[data-theme="dark"] {
+  --color-ink: #f2f2ec;
+  --color-paper: #17181a;
+  --color-peach: #101112;
+  --color-blush: #2a3300;
+  color-scheme: dark;
+}
+html[data-theme="dark"][data-mode="light"] {
+  --bg: #0d0e0f;
+  --fg: #f2f2ec;
+}
 body {
   background: var(--bg);
   color: var(--fg);

@@ -40,7 +40,7 @@ export function TokenCA({ tone = "light", className }: { tone?: "light" | "dark"
           <button
             type="button"
             onClick={() => void copy()}
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-mint px-3 text-sm font-semibold text-ink"
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-mint px-3 text-sm font-semibold text-[#0b0b0b]"
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             {copied ? "Copied" : "Copy"}

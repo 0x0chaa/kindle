@@ -13,8 +13,8 @@ export function WalletButton({ className, tone = "light" }: { className?: string
 
   const styles = {
     light: "border border-current/40 hover:bg-white hover:text-black",
-    dark: "bg-ink text-paper hover:bg-coral hover:text-ink",
-    blue: "bg-coral text-ink hover:bg-ink hover:text-paper",
+    dark: "bg-ink text-paper hover:bg-coral hover:text-[#0b0b0b]",
+    blue: "bg-coral text-[#0b0b0b] hover:bg-ink hover:text-paper",
   }[tone];
 
   return (

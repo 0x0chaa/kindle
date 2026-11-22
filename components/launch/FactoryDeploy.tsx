@@ -112,7 +112,7 @@ export function FactoryDeploy() {
           {!account ? (
             <WalletButton tone="blue" className="h-12 w-full justify-center" />
           ) : (
-            <button type="button" onClick={() => void deploy()} disabled={status !== ""} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-ink disabled:opacity-60">
+            <button type="button" onClick={() => void deploy()} disabled={status !== ""} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-[#0b0b0b] disabled:opacity-60">
               {status && <Loader2 className="size-4 animate-spin" />}
               {status === "compiling" ? "Compiling…" : status === "signing" ? "Confirm in your wallet…" : status === "confirming" ? "Deploying…" : "Deploy factory on Robinhood Chain"}
             </button>

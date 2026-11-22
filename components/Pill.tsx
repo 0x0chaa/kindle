@@ -12,10 +12,10 @@ const base =
   "group relative isolate inline-flex h-14 items-center gap-4 overflow-hidden rounded-full pl-7 pr-2 text-[15px] font-medium tracking-tight transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-coral disabled:opacity-60";
 
 const variants: Record<Variant, { btn: string; fill: string; icon: string }> = {
-  light: { btn: "bg-paper text-ink hover:text-ink", fill: "bg-coral", icon: "bg-ink text-paper" },
-  dark: { btn: "bg-ink text-paper hover:text-ink", fill: "bg-mint", icon: "bg-paper text-ink" },
+  light: { btn: "bg-paper text-ink hover:text-[#0b0b0b]", fill: "bg-coral", icon: "bg-ink text-paper" },
+  dark: { btn: "bg-ink text-paper hover:text-[#0b0b0b]", fill: "bg-mint", icon: "bg-paper text-ink" },
   outline: {
-    btn: "border border-current/30 text-current hover:text-ink",
+    btn: "border border-current/30 text-current hover:text-[#0b0b0b]",
     fill: "bg-mint",
     icon: "bg-current/10",
   },

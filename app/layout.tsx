@@ -36,6 +36,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${baloo.variable} ${nunito.variable} ${jet.variable} ${serif.variable} is-loading`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem("kindle:theme")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="font-sans">
         <Providers>
           <Nav />

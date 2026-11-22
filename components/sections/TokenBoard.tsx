@@ -75,7 +75,7 @@ export function TokenBoard() {
               e.preventDefault();
               navigate("/launch");
             }}
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-coral px-5 text-sm font-semibold text-ink"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-coral px-5 text-sm font-semibold text-[#0b0b0b]"
           >
             <Rocket className="size-4" /> Launch a token
           </a>
@@ -170,7 +170,7 @@ export function TokenBoard() {
           <button
             type="button"
             onClick={() => setShown((n) => n + 40)}
-            className="inline-flex h-12 items-center rounded-full bg-coral px-8 text-sm font-bold text-ink"
+            className="inline-flex h-12 items-center rounded-full bg-coral px-8 text-sm font-bold text-[#0b0b0b]"
           >
             Read more
           </button>

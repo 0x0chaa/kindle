@@ -189,7 +189,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <div
           ref={curtain}
           aria-hidden
-          className="pointer-events-none fixed inset-0 z-[90] grid place-items-center bg-ink text-paper"
+          className="pointer-events-none fixed inset-0 z-[90] grid place-items-center bg-[#0b0b0b] text-white"
           style={{ clipPath: "inset(100% 0% 0% 0%)" }}
         >
           <div className="aura" />

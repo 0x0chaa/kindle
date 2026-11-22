@@ -59,7 +59,7 @@ function StepCard({ s, i }: { s: (typeof howItWorks)[number]; i: number }) {
           <span className="font-mono text-xs opacity-50">{s.n}</span>
           <h3 className="mt-2 text-2xl font-semibold leading-tight tracking-tight">{s.title}</h3>
         </div>
-        <span className="grid size-11 shrink-0 place-items-center rounded-full border hairline transition-all duration-500 ease-out-expo group-hover:rotate-45 group-hover:border-coral group-hover:bg-coral group-hover:text-ink">
+        <span className="grid size-11 shrink-0 place-items-center rounded-full border hairline transition-all duration-500 ease-out-expo group-hover:rotate-45 group-hover:border-coral group-hover:bg-coral group-hover:text-[#0b0b0b]">
           <ArrowUpRight className="size-4" />
         </span>
       </div>

@@ -105,7 +105,7 @@ export function LaunchForm() {
             <button
               type="button"
               onClick={() => navigate(`/token/${result.address}`)}
-              className="inline-flex h-12 items-center rounded-full bg-coral px-5 text-sm font-bold text-ink"
+              className="inline-flex h-12 items-center rounded-full bg-coral px-5 text-sm font-bold text-[#0b0b0b]"
             >
               Open token page
             </button>
@@ -192,7 +192,7 @@ export function LaunchForm() {
         <button
           type="submit"
           disabled={status !== ""}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-ink disabled:opacity-60"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-coral text-sm font-bold text-[#0b0b0b] disabled:opacity-60"
         >
           {status ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
           {status === "signing" ? "Confirm in your wallet…" : status === "confirming" ? "Launching on Robinhood Chain…" : "Launch token"}

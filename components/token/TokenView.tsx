@@ -66,7 +66,7 @@ export function TokenView({ token }: { token: TokenRow }) {
             <button
               type="button"
               onClick={() => void copy()}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-coral px-3 text-sm font-semibold text-ink"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-coral px-3 text-sm font-semibold text-[#0b0b0b]"
             >
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
               {copied ? "Copied" : "Copy"}
@@ -83,7 +83,7 @@ export function TokenView({ token }: { token: TokenRow }) {
           </dl>
 
           {token.pairAddress ? (
-            <div className="overflow-hidden rounded-3xl border border-ink/10 bg-ink">
+            <div className="overflow-hidden rounded-3xl border border-ink/10 bg-[#0b0b0b]">
               <iframe
                 title={`${token.symbol} price chart`}
                 src={`https://dexscreener.com/robinhood/${token.pairAddress}?embed=1&theme=dark&trades=0&info=0`}
