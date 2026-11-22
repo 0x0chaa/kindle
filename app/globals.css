@@ -241,7 +241,8 @@ html.has-cursor button {
 }
 
 /* Hero */
-.kh{background:#090a09;color:#f2f2ec;padding:0!important}
+.kh{background:#090a09;color:#f2f2ec;padding:104px 0 0}
+@media(min-width:768px){.kh{padding-top:120px}}
 .kh-ticker{display:flex;gap:36px;overflow-x:auto;white-space:nowrap;padding:12px max(5vw,16px);border-block:1px solid rgba(255,255,255,.08);font-size:15px;scrollbar-width:none}
 .kh-ticker::-webkit-scrollbar{display:none}
 .kh-ticker a{color:inherit;text-decoration:none}.kh-ticker b{font-weight:600;margin-right:10px}.kh-ticker em{font-style:normal;margin-left:10px}
