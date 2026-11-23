@@ -7,7 +7,7 @@ import "server-only";
 // that empties the curve "graduates" the token: the 200M reserved tokens and the pair asset the curve collected open
 // a new Uniswap v4 pool at the curve's final price as one full-range position the factory owns and can never remove.
 //
-// Fees: every trade pays 1% (70% creator, 30% Kindle) plus the creator's optional tax (0-10%, all to the creator).
+// Fees: every trade pays 1% (70% creator, 30% Kindle) plus an optional tax (0-10%). The creator share goes to the creator, or to holders if chosen at launch.
 // After graduation the same total is the pool's LP fee, so no hook is needed. Creator fees sit in escrow on the
 // factory: withdraw them any time, or spend them on buybacks; each buyback's tokens unlock linearly over 5 years.
 // Launching costs 0.0005 ETH (owner can change it, max 0.01). New launches start with an anti-snipe tax that falls

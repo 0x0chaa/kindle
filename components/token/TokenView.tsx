@@ -35,6 +35,12 @@ export function TokenView({ token }: { token: TokenRow }) {
     ["24h change", pct(token.change24h), (token.change24h ?? 0) > 0 ? "text-[#0a8f4a]" : (token.change24h ?? 0) < 0 ? "text-[#c62828]" : ""],
     ["Liquidity", usd(token.liquidityUsd)],
     ["Age", age(token.createdAt)],
+    ...(token.isKindle
+      ? ([
+          ["Trade fee", `${1 + (token.taxPct ?? 0)}%`],
+          ["Fees go to", token.holderRewards ? "Holders" : "Creator"],
+        ] as [string, string][])
+      : []),
   ];
   const links = [
     ...(token.dexUrl ? [{ label: "DexScreener", url: token.dexUrl }] : []),
@@ -76,7 +82,7 @@ export function TokenView({ token }: { token: TokenRow }) {
             </button>
           </div>
 
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <dl className={cn("grid grid-cols-2 gap-3", stats.length > 6 ? "sm:grid-cols-4" : "sm:grid-cols-3")}>
             {stats.map(([k, v, cls]) => (
               <div key={k} className="rounded-2xl border border-ink/10 bg-paper p-4">
                 <dt className="text-xs opacity-60">{k}</dt>

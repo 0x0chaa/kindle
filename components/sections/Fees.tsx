@@ -14,11 +14,11 @@ export function Fees() {
             on-chain fees.
           </h2>
           <p className="max-w-xl text-lg leading-relaxed opacity-80 md:col-span-6 md:text-xl">
-            0.0005 ETH to launch. Every trade pays 1% — 70% to the creator, 30% to Kindle — plus the creator&apos;s optional tax of up to 10%.
+            0.0005 ETH to launch. Every trade pays 1% — 70% to the creator or its holders, 30% to Kindle — plus an optional tax of up to 10%.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {fees.map((f) => (
             <article key={f.title} className="h-full rounded-3xl border border-current/10 bg-paper p-6">
               <p className="text-sm opacity-60">{f.title}</p>

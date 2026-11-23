@@ -4,7 +4,7 @@ import { swapQuote } from "@/lib/swap";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** Quote + ready-to-sign steps for the swap box (Uniswap v3, then v4). No AI involved. */
+/** Quote + ready-to-sign steps for the swap box (Kindle tokens via Uniswap v4; other tokens v3, then v4). No AI involved. */
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {

@@ -9,12 +9,12 @@ export const fees: { title: string; value: string; text: string }[] = [
   {
     title: "Trading fee",
     value: "1%",
-    text: "Every trade pays 1%, on the bonding curve and in the Uniswap v4 pool after graduation: 70% to the creator, 30% to Kindle.",
+    text: "Every trade pays 1%, on the bonding curve and in the Uniswap v4 pool after graduation: 70% to the creator (or the holders, if the creator chose that), 30% to Kindle.",
   },
   {
     title: "Creator tax",
     value: "0–10%",
-    text: "Creators can add their own tax at launch. It's charged on every trade, on the curve and in the pool, and goes entirely to the creator.",
+    text: "Creators can add their own tax at launch. It's charged on every trade, on the curve and in the pool, and goes entirely to the creator — or to holders in holder mode.",
   },
   {
     title: "Pairs",
@@ -57,7 +57,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "What is the creator tax?",
-    a: "An optional extra fee, from 0 to 10%, that a creator sets at launch. It applies to every buy and sell — on the curve and, after graduation, in the Uniswap v4 pool — and all of it goes to the creator. Check a token's tax on its page before you trade.",
+    a: "An optional extra fee, from 0 to 10%, that a creator sets at launch. It applies to every buy and sell — on the curve and, after graduation, in the Uniswap v4 pool — and all of it goes to the creator (or to holders, if the creator chose that at launch). Check a token's tax on its page before you trade.",
   },
   {
     q: "Can a token be paired with something other than ETH?",
@@ -69,7 +69,7 @@ export const faqs: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost?",
-    a: "Launching costs 0.0005 ETH plus gas. Every trade pays 1% (70% to the creator, 30% to Kindle) plus the creator's tax, if any.",
+    a: "Launching costs 0.0005 ETH plus gas. Every trade pays 1% (70% to the creator or its holders, 30% to Kindle) plus the token's tax, if any.",
   },
   {
     q: "Is every token here safe?",
