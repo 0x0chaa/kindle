@@ -3,7 +3,7 @@ import { docs } from "@/lib/launchpad-content";
 
 export const metadata: Metadata = {
   title: "Docs — Kindle",
-  description: "How Kindle works: launching with Kindle's factory, token lists, trading through Uniswap v3 and v4, fees and safety.",
+  description: "How Kindle works: launching on a bonding curve, graduation to Uniswap v4, pairs, fees, creator tax, buybacks and safety.",
 };
 
 export default function DocsPage() {

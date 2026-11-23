@@ -83,7 +83,7 @@ export function Hero() {
             <br />
             Robinhood Chain
           </h1>
-          <p className="kh-lead">A meme, a community, an idea: Kindle gives it a token, a locked pool and a market in one transaction.</p>
+          <p className="kh-lead">A meme, a community, an idea: Kindle turns it into a token and a market in one transaction — and a locked Uniswap v4 pool when it graduates.</p>
           <Link
             href="/launch"
             className="mt-6 inline-flex h-12 items-center gap-2 rounded-full bg-coral px-6 text-sm font-bold text-[#0b0b0b] shadow-[0_0_24px_rgba(204,255,0,0.35)]"

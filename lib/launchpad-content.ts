@@ -93,9 +93,9 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     id: "launching",
     title: "Launching a token",
     body: [
-      "Open Launch, connect your wallet, enter a name, a ticker and an image link, and confirm one transaction.",
-      "Kindle's factory creates a token with a fixed supply of 1,000,000,000. 800M are sold on a bonding curve with virtual reserves (start price ≈ 0.0000000013 ETH, about 1.3 ETH fully diluted). You can add a first buy in the same transaction.",
-      "When the curve sells out (~4.2 ETH), the remaining 200M tokens and the ETH go into a Uniswap v4 pool (1% fee) owned by the factory, which has no way to remove it. Your wallet receives 70% of all fees. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
+      "Open Launch, connect your wallet, enter a name, a ticker and an image link, choose the pair, an optional creator tax (0–10%) and auto-buyback share, and confirm one transaction.",
+      "Kindle's factory creates a token with a fixed supply of 1,000,000,000. 800M are sold on a bonding curve with virtual reserves (for ETH pairs the start price is ≈ 0.0000000013 ETH, about 1.3 ETH fully diluted). You can add a first buy in the same transaction.",
+      "When the curve sells out (~4.2 ETH for ETH pairs, or the pair's own target), the remaining 200M tokens and everything raised open a Uniswap v4 pool owned by the factory, which has no way to remove it. The creator receives 70% of the 1% fee plus all of the creator tax. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
     ],
   },
   {
@@ -103,7 +103,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "Token lists",
     body: [
       "New — launched on Kindle in the last 3 days, newest first.",
-      "Top — highest market cap. Trending — highest 24-hour volume.",
+      "Top — highest market cap. Trending — pool volume for graduated tokens, curve progress for the rest.",
       "Graduating — bonding curve more than half sold. Graduated — curve sold out and trading in the Uniswap v4 pool.",
       "Lists come from Kindle's factory contract on-chain; prices, market caps and volume from DexScreener, refreshed about every 30 seconds.",
     ],
@@ -112,9 +112,9 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     id: "trading",
     title: "Trading",
     body: [
-      "The swap box on each token page buys with ETH or sells for ETH.",
+      "The trade box on each token page buys with the token's pair asset (ETH by default) or sells for it.",
       "Before graduation you trade on the bonding curve, directly against the factory. After graduation, quotes come from Uniswap's v4 quoter. Each trade is dry-run on Robinhood Chain before you sign.",
-      "ETH swaps need one signature. Selling a token needs an exact-amount approval through Permit2 first, then the swap. Max slippage is up to you (0.5–5%).",
+      "On the curve, ETH buys and all sells need one signature; buying with another pair asset needs an exact-amount approval first. After graduation, selling needs an exact-amount Permit2 approval, then the swap. Max slippage is up to you.",
     ],
   },
   {
@@ -141,6 +141,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     title: "For developers",
     body: [
       "The factory's address is shown on the Launch page; its verified source is on Robinhood Chain's Blockscout. Read launches with recent(offset, count) or listen for the Launched event.",
+      "Creators: claimCreatorFees(token) pays out escrow (sweepFees(token) first after graduation), buyback(token, amount) and claimVested(token) handle buybacks.",
       "Kindle's own endpoints: GET /api/tokens?tab=new|top|trending|graduating|graduated and POST /api/swap/quote.",
     ],
   },
