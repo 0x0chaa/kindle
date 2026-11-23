@@ -42,12 +42,12 @@ export function About() {
 
         <ol className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {needs.map((p, i) => (
-            <li key={p.t} className="flex flex-col rounded-3xl border border-ink/10 bg-paper p-6">
-              <span className="mb-6 grid size-9 place-items-center rounded-full bg-coral font-mono text-xs font-bold text-[#0b0b0b]">
-                0{i + 1}
-              </span>
-              <h3 className="mb-2 text-lg font-semibold tracking-tight">{p.t}</h3>
-              <p className="text-sm leading-relaxed opacity-70">{p.d}</p>
+            <li key={p.t}>
+              <article className="h-full rounded-3xl border border-current/10 bg-paper p-6">
+                <p className="text-sm opacity-60">Need {String(i + 1).padStart(2, "0")}</p>
+                <h4 className="display mt-2 text-[1.9rem] leading-tight text-[#3d7a00]">{p.t}</h4>
+                <p className="mt-3 text-sm leading-relaxed opacity-75">{p.d}</p>
+              </article>
             </li>
           ))}
         </ol>
