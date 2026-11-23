@@ -13,6 +13,8 @@ export type TokenRow = {
   graduation: number | null;
   quote: { address: string; symbol: string; decimals: number } | null;
   taxPct: number | null;
+  /** true: the creator share of fees goes to holders. */
+  holderRewards: boolean | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;

@@ -63,7 +63,17 @@ contract KindleToken {
     uint256 public immutable totalSupply;
     address public immutable creator;
     address public immutable factory;
+    address public immutable poolManager;
+    bool public immutable holderRewards; // fees go to holders instead of the creator
     bool public graduated;
+
+    // Holder rewards: pair-asset fees credited per token held (paid out by the factory).
+    uint256 private constant MAG = 2 ** 128;
+    address private constant DEAD = 0x000000000000000000000000000000000000dEaD;
+    uint256 public magPerShare;
+    uint256 public totalShares;
+    mapping(address => int256) private _corr;
+    mapping(address => uint256) public rewardsClaimed;
 
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -76,7 +86,18 @@ contract KindleToken {
         _;
     }
 
-    constructor(string memory name_, string memory symbol_, string memory image_, address creator_, uint256 supply_, address factory_) {
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        string memory image_,
+        address creator_,
+        uint256 supply_,
+        address factory_,
+        address poolManager_,
+        bool holderRewards_
+    ) {
+        poolManager = poolManager_;
+        holderRewards = holderRewards_;
         name = name_;
         symbol = symbol_;
         image = image_;
@@ -118,12 +139,46 @@ contract KindleToken {
         graduated = true;
     }
 
+    /// Curve inventory (factory), pool liquidity (PoolManager) and burned tokens don't earn rewards.
+    function _excluded(address a) private view returns (bool) {
+        return a == factory || a == poolManager || a == DEAD || a == address(0);
+    }
+
+    /// Credits pair-asset rewards to current holders. Returns false while fewer than 1 token is held (factory keeps it pending).
+    function addRewards(uint256 amount) external onlyFactory returns (bool) {
+        if (totalShares < 1 ether) return false;
+        magPerShare += (amount * MAG) / totalShares;
+        return true;
+    }
+
+    /// Unclaimed holder rewards of an account, in the token's pair asset.
+    function rewardsOf(address a) public view returns (uint256) {
+        if (!holderRewards || _excluded(a)) return 0;
+        return uint256(int256(magPerShare * balanceOf[a]) + _corr[a]) / MAG - rewardsClaimed[a];
+    }
+
+    function markRewardsClaimed(address a) external onlyFactory returns (uint256 r) {
+        r = rewardsOf(a);
+        rewardsClaimed[a] += r;
+    }
+
     function _move(address from, address to, uint256 amount) private {
         uint256 bal = balanceOf[from];
         require(bal >= amount, "balance");
         unchecked {
             balanceOf[from] = bal - amount;
             balanceOf[to] += amount;
+        }
+        if (holderRewards && from != to) {
+            int256 m = int256(magPerShare * amount);
+            if (!_excluded(from)) {
+                totalShares -= amount;
+                _corr[from] += m;
+            }
+            if (!_excluded(to)) {
+                totalShares += amount;
+                _corr[to] -= m;
+            }
         }
         emit Transfer(from, to, amount);
     }
@@ -132,17 +187,19 @@ contract KindleToken {
 /// Holds the token bytecode so the factory itself stays under the contract size limit.
 contract KindleTokenDeployer {
     address public immutable factory;
+    address public immutable poolManager;
 
-    constructor() {
+    constructor(address poolManager_) {
         factory = msg.sender;
+        poolManager = poolManager_;
     }
 
-    function deploy(string calldata name_, string calldata symbol_, string calldata image_, address creator_, uint256 supply_)
+    function deploy(string calldata name_, string calldata symbol_, string calldata image_, address creator_, uint256 supply_, bool holders)
         external
         returns (address)
     {
         require(msg.sender == factory, "factory");
-        return address(new KindleToken(name_, symbol_, image_, creator_, supply_, factory));
+        return address(new KindleToken(name_, symbol_, image_, creator_, supply_, factory, poolManager, holders));
     }
 }
 
@@ -166,7 +223,8 @@ contract KindleFactory {
         bool graduated;
         uint256 sold;
         uint256 raised;
-        uint256 creatorFees; // escrow, in the pair asset
+        uint256 creatorFees; // escrow, in the pair asset (holder mode: rewards waiting for the first holders)
+        bool holderRewards; // creator share of fees goes to token holders
     }
 
     struct Tranche {
@@ -182,6 +240,7 @@ contract KindleFactory {
         address quote;
         uint16 taxBps;
         uint16 buybackBps;
+        bool holderRewards;
         uint256 buyAmount;
         uint256 minTokensOut;
     }
@@ -205,6 +264,7 @@ contract KindleFactory {
         uint256 sold;
         uint256 raised;
         uint256 graduation;
+        bool holderRewards;
         string name;
         string symbol;
         string image;
@@ -253,6 +313,7 @@ contract KindleFactory {
     event CreatorFeesClaimed(address indexed token, address to, uint256 amount);
     event Buyback(address indexed token, uint256 quoteSpent, uint256 tokensLocked);
     event VestClaimed(address indexed token, address to, uint256 amount);
+    event HolderRewardsClaimed(address indexed token, address indexed holder, uint256 amount);
     event PairSet(address indexed asset, bool enabled, uint256 graduation);
     event FeeRecipientChanged(address indexed token, address recipient);
     event OwnerChanged(address owner);
@@ -279,7 +340,7 @@ contract KindleFactory {
         protocolShareBps = protocolShareBps_;
         owner = msg.sender;
         launchFee = 0.0005 ether;
-        deployer = new KindleTokenDeployer();
+        deployer = new KindleTokenDeployer(poolManager_);
         // ETH pair: graduates at 4.2 ETH. ETH (address 0) is always currency0.
         _setPair(address(0), true, 4.2 ether, 546726262810727612002490081201916, 0, 28953770738886498270290);
     }
@@ -292,13 +353,13 @@ contract KindleFactory {
 
     function launch(LaunchParams calldata p) external payable nonReentrant returns (address token) {
         require(pairs[p.quote].enabled, "pair");
-        require(p.taxBps <= MAX_TAX_BPS && p.buybackBps <= 10000, "params");
+        require(p.taxBps <= MAX_TAX_BPS && p.buybackBps <= (p.holderRewards ? 0 : 10000), "params");
         uint256 nl = bytes(p.name).length;
         uint256 sl = bytes(p.symbol).length;
         require(nl > 0 && nl <= 40 && sl > 0 && sl <= 12 && bytes(p.image).length <= 300, "metadata");
         require(msg.value == launchFee + (p.quote == address(0) ? p.buyAmount : 0), "value");
 
-        token = deployer.deploy(p.name, p.symbol, p.image, msg.sender, SUPPLY);
+        token = deployer.deploy(p.name, p.symbol, p.image, msg.sender, SUPPLY, p.holderRewards);
         Launch storage l = _launches.push();
         l.token = token;
         l.creator = msg.sender;
@@ -307,6 +368,7 @@ contract KindleFactory {
         l.createdAt = uint64(block.timestamp);
         l.taxBps = p.taxBps;
         l.buybackBps = p.buybackBps;
+        l.holderRewards = p.holderRewards;
         indexPlusOne[token] = _launches.length;
         _pairUsed[p.quote] = true;
         protocolFees[address(0)] += launchFee;
@@ -331,8 +393,8 @@ contract KindleFactory {
         require(out >= minOut, "slippage");
         l.sold -= amount;
         l.raised -= gross;
-        _fees(l, fee, tax);
         KindleToken(token).curvePull(msg.sender, amount);
+        _fees(l, fee, tax);
         emit Trade(token, msg.sender, false, out, amount, l.sold, l.raised);
         _pay(l.quote, msg.sender, out);
     }
@@ -405,7 +467,13 @@ contract KindleFactory {
     function _fees(Launch storage l, uint256 fee, uint256 tax) private {
         uint256 p = (fee * protocolShareBps) / 10000;
         protocolFees[l.quote] += p;
-        l.creatorFees += fee - p + tax;
+        _credit(l, fee - p + tax);
+    }
+
+    /// Creator share of fees: into the creator's escrow, or (holder mode) to token holders.
+    function _credit(Launch storage l, uint256 amount) private {
+        l.creatorFees += amount;
+        if (l.holderRewards && l.creatorFees > 0 && KindleToken(l.token).addRewards(l.creatorFees)) l.creatorFees = 0;
     }
 
     // ------------------------------------------------------------------ graduation
@@ -528,8 +596,8 @@ contract KindleFactory {
         uint256 tP = (t * protocolShareBps) / key.fee;
         if (q > 0) poolManager.take(l.quote, address(this), q);
         protocolFees[l.quote] += qP;
-        l.creatorFees += q - qP;
-        if (t > tP) poolManager.take(token, l.feeRecipient, t - tP);
+        _credit(l, q - qP);
+        if (t > tP) poolManager.take(token, l.holderRewards ? DEAD : l.feeRecipient, t - tP);
         if (tP > 0) poolManager.take(token, treasury, tP);
         emit FeesSwept(token, q - qP, qP, t - tP, tP);
     }
@@ -537,6 +605,7 @@ contract KindleFactory {
     /// Withdraw escrowed creator fees to the fee recipient (buybackBps of it is spent on a buyback first). Anyone may call.
     function claimCreatorFees(address token) external nonReentrant returns (uint256 paid) {
         Launch storage l = _get(token);
+        require(!l.holderRewards, "holders");
         uint256 toBuyback = (l.creatorFees * l.buybackBps) / 10000;
         if (toBuyback > 0) _buyback(token, l, toBuyback);
         paid = l.creatorFees;
@@ -550,7 +619,7 @@ contract KindleFactory {
     /// The fee recipient spends escrowed fees on a buyback now. Each buyback's tokens unlock linearly over 5 years.
     function buyback(address token, uint256 amount) external nonReentrant {
         Launch storage l = _get(token);
-        require(msg.sender == l.feeRecipient, "recipient");
+        require(msg.sender == l.feeRecipient && !l.holderRewards, "recipient");
         require(amount > 0 && amount <= l.creatorFees, "amount");
         _buyback(token, l, amount);
     }
@@ -610,6 +679,16 @@ contract KindleFactory {
         emit VestClaimed(token, l.feeRecipient, amount);
     }
 
+    /// Holder mode: pays the caller's share of fees, in the pair asset. After graduation, sweepFees first.
+    function claimRewards(address token) external nonReentrant returns (uint256 amount) {
+        Launch storage l = _get(token);
+        amount = KindleToken(token).markRewardsClaimed(msg.sender);
+        if (amount > 0) {
+            _pay(l.quote, msg.sender, amount);
+            emit HolderRewardsClaimed(token, msg.sender, amount);
+        }
+    }
+
     function withdrawProtocolFees(address asset) external nonReentrant {
         uint256 amount = protocolFees[asset];
         protocolFees[asset] = 0;
@@ -626,7 +705,7 @@ contract KindleFactory {
 
     function setBuybackBps(address token, uint16 bps) external {
         Launch storage l = _get(token);
-        require(msg.sender == l.feeRecipient, "recipient");
+        require(msg.sender == l.feeRecipient && !l.holderRewards, "recipient");
         require(bps <= 10000, "bps");
         l.buybackBps = bps;
     }
@@ -732,6 +811,7 @@ contract KindleFactory {
         r.sold = l.sold;
         r.raised = l.raised;
         r.graduation = pairs[l.quote].graduation;
+        r.holderRewards = l.holderRewards;
         r.name = t.name();
         r.symbol = t.symbol();
         r.image = t.image();

@@ -31,6 +31,8 @@ export type TokenRow = {
   graduation: number | null;
   quote: { address: string; symbol: string; decimals: number } | null;
   taxPct: number | null;
+  /** true: the creator share of fees goes to holders. */
+  holderRewards: boolean | null;
   priceUsd: number | null;
   marketCap: number | null;
   volume24h: number | null;
@@ -123,6 +125,7 @@ type Info = {
   sold: bigint;
   raised: bigint;
   graduation: bigint;
+  holderRewards: boolean;
   name: string;
   symbol: string;
   image: string;
@@ -188,6 +191,7 @@ const rowOf = (t: Info, usd: number | null, meta: { symbol: string; decimals: nu
     graduation: Number(t.graduation) / unit,
     quote: { address: t.quote, symbol: meta.symbol, decimals: meta.decimals },
     taxPct: t.taxBps / 100,
+    holderRewards: t.holderRewards,
     priceUsd,
     marketCap: priceUsd ? priceUsd * 1e9 : null,
     volume24h: null,
@@ -271,6 +275,7 @@ export async function getToken(address: string): Promise<TokenRow | null> {
           sold: l.sold,
           raised: l.raised,
           graduation: pair[1],
+          holderRewards: l.holderRewards,
           name,
           symbol,
           image,
@@ -297,6 +302,7 @@ export async function getToken(address: string): Promise<TokenRow | null> {
     graduation: null,
     quote: null,
     taxPct: null,
+    holderRewards: null,
     priceUsd: null,
     marketCap: null,
     volume24h: null,

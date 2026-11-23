@@ -9,7 +9,7 @@ export const howItWorks: { title: string; desc: string; tags: string[] }[] = [
   },
   {
     title: "Set up your token",
-    desc: "Pick a name, a ticker and an image. Choose what it trades against (ETH or an approved asset), an optional creator tax of 0–10%, and how much of your fees should buy your token back.",
+    desc: "Pick a name, a ticker and an image. Choose what it trades against (ETH or an approved asset), whether fees go to you or to your holders, an optional tax of 0–10%, and how much of your fees should buy your token back.",
     tags: ["Name & image", "Pair", "Tax", "Auto-buyback"],
   },
   {
@@ -39,8 +39,8 @@ export const howItWorks: { title: string; desc: string; tags: string[] }[] = [
   },
   {
     title: "Earn and claim",
-    desc: "70% of the 1% fee and all of the creator tax go to the creator, in the pair asset. Fees wait in escrow until claimed; anyone can trigger the payout, the money always goes to the creator.",
-    tags: ["70% of fees", "+ creator tax", "Escrow"],
+    desc: "70% of the 1% fee and all of the tax go to the creator — or, if the creator chose it at launch, to everyone holding the token, split by balance. Paid in the pair asset and claimed from the token page.",
+    tags: ["70% of fees", "+ tax", "Creator or holders"],
   },
   {
     title: "Buy back, locked for 5 years",
@@ -53,7 +53,7 @@ export const howItWorks: { title: string; desc: string; tags: string[] }[] = [
 export const highlights = [
   { t: "Fair launch", d: "Fixed 1B supply, no presale and no team allocation. Everyone buys from the same curve." },
   { t: "Locked liquidity", d: "At graduation the pool's liquidity is owned by the factory, which has no way to remove it." },
-  { t: "Creator earnings", d: "70% of every 1% fee plus an optional creator tax of up to 10%, paid in the pair asset." },
+  { t: "Creator or holder earnings", d: "70% of every 1% fee plus an optional tax of up to 10%, paid in the pair asset — to the creator or shared by holders." },
   { t: "Any pair", d: "Trade against ETH or an approved asset like a tokenized stock or a stablecoin." },
   { t: "Long-term buybacks", d: "Creators can buy their token back with fees; buybacks unlock over five years." },
   { t: "Bot protection", d: "A 5-second anti-snipe tax, falling from 99% to 0, keeps launches fair." },

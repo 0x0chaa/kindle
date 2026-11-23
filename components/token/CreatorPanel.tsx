@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useAccount } from "@/lib/wallet-store";
 import { ensureChain, getWallet } from "@/lib/wallet";
 import { NETWORKS } from "@/lib/networks";
-import { FACTORY, FACTORY_ABI, PROTOCOL_SHARE_BPS, VEST_YEARS } from "@/lib/factory";
+import { ERC20_ABI, FACTORY, FACTORY_ABI, PROTOCOL_SHARE_BPS, VEST_YEARS } from "@/lib/factory";
 import { WalletButton } from "../WalletButton";
 
 const robinhood = defineChain({
@@ -17,7 +17,7 @@ const robinhood = defineChain({
 });
 const client = createPublicClient({ chain: robinhood, transport: http(NETWORKS.robinhood.rpc) });
 
-type Data = { escrow: bigint; buybackBps: number; recipient: string; taxBps: number; locked: bigint; claimable: bigint };
+type Data = { escrow: bigint; buybackBps: number; recipient: string; taxBps: number; locked: bigint; claimable: bigint; holders: boolean; mine: bigint };
 
 const n = (v: bigint, d: number, max = 6) => Number(formatUnits(v, d)).toLocaleString("en-US", { maximumFractionDigits: max });
 
@@ -48,8 +48,12 @@ export function CreatorPanel({
       client.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "lockedTokens", args: [token] }),
       client.readContract({ address: FACTORY, abi: FACTORY_ABI, functionName: "vested", args: [token] }),
     ]);
-    setData({ escrow: l.creatorFees, buybackBps: l.buybackBps, recipient: l.feeRecipient, taxBps: l.taxBps, locked, claimable });
-  }, [token]);
+    const mine =
+      l.holderRewards && account
+        ? await client.readContract({ address: token, abi: ERC20_ABI, functionName: "rewardsOf", args: [account as Address] })
+        : 0n;
+    setData({ escrow: l.creatorFees, buybackBps: l.buybackBps, recipient: l.feeRecipient, taxBps: l.taxBps, locked, claimable, holders: l.holderRewards, mine });
+  }, [token, account]);
 
   useEffect(() => {
     void load().catch(() => {});
@@ -60,7 +64,7 @@ export function CreatorPanel({
   if (!FACTORY || !data) return null;
   const isRecipient = !!account && account.toLowerCase() === data.recipient.toLowerCase();
 
-  const run = async (label: string, fn: "sweepFees" | "claimCreatorFees" | "claimVested" | "buyback" | "setBuybackBps") => {
+  const run = async (label: string, fn: "sweepFees" | "claimCreatorFees" | "claimVested" | "buyback" | "setBuybackBps" | "claimRewards") => {
     setMsg("");
     const eth = getWallet();
     if (!eth || !account) return setMsg("Connect your wallet first.");
@@ -110,6 +114,52 @@ export function CreatorPanel({
   };
 
   const btn = "inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-bold disabled:opacity-50";
+
+  if (data.holders)
+    return (
+      <div className="mt-4 space-y-3 rounded-3xl border border-ink/10 bg-paper p-5 text-sm">
+        <h2 className="font-bold">Holder rewards</h2>
+        <p className="opacity-75">
+          This token shares its fees with holders. Every trade pays 1% ({100 - PROTOCOL_SHARE_BPS / 100}% to holders,{" "}
+          {PROTOCOL_SHARE_BPS / 100}% Kindle){data.taxBps > 0 ? ` plus a ${data.taxBps / 100}% tax that all goes to holders` : ""}, split by
+          how many {symbol} each wallet holds. Rewards are paid in {quote.symbol}.
+        </p>
+        {data.escrow > 0n && (
+          <p className="opacity-70">
+            Waiting for the first holders: {n(data.escrow, quote.decimals)} {quote.symbol}
+          </p>
+        )}
+        {!account ? (
+          <WalletButton tone="blue" className="h-10" />
+        ) : (
+          <>
+            <p>
+              Your rewards:{" "}
+              <b>
+                {n(data.mine, quote.decimals)} {quote.symbol}
+              </b>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {graduated && (
+                <button type="button" disabled={!!busy} onClick={() => void run("sweep", "sweepFees")} className={`${btn} border border-ink/20`}>
+                  {busy === "sweep" && <Loader2 className="size-4 animate-spin" />} Sweep pool fees
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={!!busy || data.mine === 0n}
+                onClick={() => void run("rewards", "claimRewards")}
+                className={`${btn} bg-coral text-[#0b0b0b]`}
+              >
+                {busy === "rewards" && <Loader2 className="size-4 animate-spin" />} Claim rewards
+              </button>
+            </div>
+            {graduated && <p className="text-xs opacity-60">Pool fees reach holders when someone sweeps them — anyone can press the button.</p>}
+          </>
+        )}
+        {msg && <p className="break-words">{msg}</p>}
+      </div>
+    );
 
   return (
     <div className="mt-4 space-y-4 rounded-3xl border border-ink/10 bg-paper p-5 text-sm">

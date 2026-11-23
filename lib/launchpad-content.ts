@@ -22,6 +22,11 @@ export const fees: { title: string; value: string; text: string }[] = [
     text: "Tokens trade against ETH or another approved asset, such as a tokenized stock or a stablecoin. Fees are paid in that asset.",
   },
   {
+    title: "Fees to holders",
+    value: "Optional",
+    text: "At launch, creators choose who gets the creator share of fees: themselves, or everyone holding the token, split by how much they hold.",
+  },
+  {
     title: "Buybacks",
     value: "5 years",
     text: "Creators can spend their fees buying their own token back. Bought-back tokens unlock evenly over five years.",
@@ -75,6 +80,10 @@ export const faqs: { q: string; a: string }[] = [
     a: "Any browser wallet on Robinhood Chain — MetaMask, Coinbase Wallet, Rabby and others. On a phone, open Kindle inside your wallet app's browser.",
   },
   {
+    q: "What does \"fees to holders\" mean?",
+    a: "At launch the creator picks where the creator share of fees goes. With Holders, 70% of the 1% fee and all of the tax are shared by everyone holding the token, in proportion to how much they hold, and paid in the pair asset. Holders claim on the token page (after graduation, press Sweep pool fees first). The creator gets no fees in this mode.",
+  },
+  {
     q: "How do creators get paid?",
     a: "Fees collect in escrow. On the token page, Claim creator fees pays them out (after graduation, Sweep pool fees first moves the pool's fees into escrow). Anyone can press it; the money always goes to the creator.",
   },
@@ -93,9 +102,9 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     id: "launching",
     title: "Launching a token",
     body: [
-      "Open Launch, connect your wallet, enter a name and a ticker, upload an image file, choose the pair, an optional creator tax (0–10%) and auto-buyback share, and confirm one transaction.",
+      "Open Launch, connect your wallet, enter a name and a ticker, upload an image file, choose the pair, whether fees go to you or to holders, an optional tax (0–10%) and auto-buyback share, and confirm one transaction.",
       "Kindle's factory creates a token with a fixed supply of 1,000,000,000. 800M are sold on a bonding curve with virtual reserves (for ETH pairs the start price is ≈ 0.0000000013 ETH, about 1.3 ETH fully diluted). You can add a first buy in the same transaction.",
-      "When the curve sells out (~4.2 ETH for ETH pairs, or the pair's own target), the remaining 200M tokens and everything raised open a Uniswap v4 pool owned by the factory, which has no way to remove it. The creator receives 70% of the 1% fee plus all of the creator tax. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
+      "When the curve sells out (~4.2 ETH for ETH pairs, or the pair's own target), the remaining 200M tokens and everything raised open a Uniswap v4 pool owned by the factory, which has no way to remove it. The creator — or, if chosen at launch, the token's holders — receives 70% of the 1% fee plus all of the tax. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
     ],
   },
   {
@@ -124,6 +133,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
       "Launch: 0.0005 ETH plus gas (the owner can change it, at most 0.01 ETH; it's shown before you sign).",
       "Trading: 1% on every trade, on the curve and in the pool — 70% to the creator, 30% to Kindle's treasury — plus the creator's optional tax (0–10%, all to the creator). After graduation the total is the pool's LP fee.",
       "Pairs: ETH by default, or an asset Kindle has approved (tokenized stocks, stablecoins). Graduation targets are set per pair.",
+      "Fees to holders: if chosen at launch, the creator share goes to holders instead, split by balance and claimed with claimRewards(token).",
       "Buybacks: creators can spend escrowed fees on their own token; each buyback unlocks linearly over five years.",
       "Anti-snipe: buys in the first 5 seconds after launch pay a tax that falls from 99% to 0 (paid to the treasury).",
     ],

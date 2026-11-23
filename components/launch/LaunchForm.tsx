@@ -60,6 +60,8 @@ export function LaunchForm() {
   const [pairAddr, setPairAddr] = useState<string>(ETH_ADDRESS);
   const [taxPct, setTaxPct] = useState("0");
   const [buybackPct, setBuybackPct] = useState("0");
+  const [feesTo, setFeesTo] = useState<"creator" | "holders">("creator");
+  const holders = feesTo === "holders";
   const [status, setStatus] = useState<"" | "signing" | "confirming" | "done">("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ address?: string; txHash?: string } | null>(null);
@@ -168,7 +170,8 @@ export function LaunchForm() {
             image: image.trim(),
             quote: pair.address as Address,
             taxBps: Math.round(tax * 100),
-            buybackBps: Math.round(buybackShare * 100),
+            buybackBps: holders ? 0 : Math.round(buybackShare * 100),
+            holderRewards: holders,
             buyAmount,
             minTokensOut: firstBuy ? (firstBuy.out * 95n) / 100n : 0n,
           },
@@ -296,7 +299,33 @@ export function LaunchForm() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="text-sm font-semibold">
+        Fees go to
+        <div role="radiogroup" aria-label="Fees go to" className="mt-1 grid grid-cols-2 gap-2 rounded-2xl bg-current/5 p-1">
+          {(
+            [
+              ["creator", "Creator", "You claim them, or use them for buybacks"],
+              ["holders", "Holders", "Shared by everyone holding the token"],
+            ] as const
+          ).map(([v, label, hint]) => (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={feesTo === v}
+              onClick={() => setFeesTo(v)}
+              className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
+                feesTo === v ? "bg-coral text-[#0b0b0b] shadow-sm" : "hover:bg-current/5"
+              }`}
+            >
+              <span className="block font-bold">{label}</span>
+              <span className="block text-xs font-normal opacity-70">{hint}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={`grid gap-4 ${holders ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         <label className="block text-sm font-semibold">
           Pair
           <select
@@ -312,7 +341,7 @@ export function LaunchForm() {
           </select>
         </label>
         <label className="block text-sm font-semibold">
-          Creator tax (0–{MAX_TAX_PCT}%)
+          {holders ? "Holder tax" : "Creator tax"} (0–{MAX_TAX_PCT}%)
           <input
             value={taxPct}
             onChange={(e) => setTaxPct(e.target.value.replace(/[^0-9.]/g, ""))}
@@ -320,21 +349,24 @@ export function LaunchForm() {
             className={`${field} mt-1 font-normal`}
           />
         </label>
-        <label className="block text-sm font-semibold">
-          Auto-buyback (% of fees)
-          <input
-            value={buybackPct}
-            onChange={(e) => setBuybackPct(e.target.value.replace(/[^0-9.]/g, ""))}
-            inputMode="decimal"
-            className={`${field} mt-1 font-normal`}
-          />
-        </label>
+        {!holders && (
+          <label className="block text-sm font-semibold">
+            Auto-buyback (% of fees)
+            <input
+              value={buybackPct}
+              onChange={(e) => setBuybackPct(e.target.value.replace(/[^0-9.]/g, ""))}
+              inputMode="decimal"
+              className={`${field} mt-1 font-normal`}
+            />
+          </label>
+        )}
       </div>
       <p className="-mt-2 text-xs opacity-70">
         Pair: what {symbol.toUpperCase() || "your token"} trades against; it graduates when the curve has raised{" "}
-        {Number(formatUnits(pair.graduation, pair.decimals)).toLocaleString("en-US")} {pair.symbol}. Tax: extra % on every trade, all to
-        you, on the curve and in the pool. Auto-buyback: when fees are claimed, this share buys {symbol.toUpperCase() || "your token"} back
-        and locks it for {VEST_YEARS} years.
+        {Number(formatUnits(pair.graduation, pair.decimals)).toLocaleString("en-US")} {pair.symbol}.{" "}
+        {holders
+          ? `Holders: ${100 - PROTOCOL_SHARE_BPS / 100}% of the 1% fee plus all of the tax are shared by ${symbol.toUpperCase() || "token"} holders, paid in ${pair.symbol}, claimable from the token page. You don't receive fees.`
+          : `Tax: extra % on every trade, all to you, on the curve and in the pool. Auto-buyback: when fees are claimed, this share buys ${symbol.toUpperCase() || "your token"} back and locks it for ${VEST_YEARS} years.`}
       </p>
 
       <label className="block text-sm font-semibold">
@@ -360,8 +392,9 @@ export function LaunchForm() {
           and the liquidity is locked forever.
         </li>
         <li>
-          • Every trade pays {POOL_FEE_PCT}% ({100 - PROTOCOL_SHARE_BPS / 100}% to you, {PROTOCOL_SHARE_BPS / 100}% to Kindle)
-          {tax > 0 ? ` plus your ${tax}% tax` : ""}. Your fees wait in escrow until you claim them.
+          • Every trade pays {POOL_FEE_PCT}% ({100 - PROTOCOL_SHARE_BPS / 100}% to {holders ? "holders" : "you"}, {PROTOCOL_SHARE_BPS / 100}% to Kindle)
+          {tax > 0 ? ` plus a ${tax}% tax` : ""}.{" "}
+          {holders ? "Holders claim their share from the token page." : "Your fees wait in escrow until you claim them."}
         </li>
         <li>• Buyers in the first {SNIPE_WINDOW_S} seconds pay an anti-snipe tax that falls to 0 — it stops bots grabbing your launch.</li>
         <li>• You pay gas{launchFeeText}. Your wallet shows the total before you sign.</li>

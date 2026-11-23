@@ -21,7 +21,7 @@ export const MAX_TAX_PCT = 10;
 export const VEST_YEARS = 5;
 
 export const FACTORY_ABI = parseAbi([
-  "struct LaunchParams { string name; string symbol; string image; address quote; uint16 taxBps; uint16 buybackBps; uint256 buyAmount; uint256 minTokensOut; }",
+  "struct LaunchParams { string name; string symbol; string image; address quote; uint16 taxBps; uint16 buybackBps; bool holderRewards; uint256 buyAmount; uint256 minTokensOut; }",
   "function launch(LaunchParams p) payable returns (address token)",
   "function buy(address token, uint256 amountIn, uint256 minTokensOut) payable returns (uint256)",
   "function sell(address token, uint256 amount, uint256 minOut) returns (uint256 out)",
@@ -37,6 +37,7 @@ export const FACTORY_ABI = parseAbi([
   "function setLaunchFee(uint256 fee)",
   "function sweepFees(address token)",
   "function claimCreatorFees(address token) returns (uint256 paid)",
+  "function claimRewards(address token) returns (uint256 amount)",
   "function buyback(address token, uint256 amount)",
   "function setBuybackBps(address token, uint16 bps)",
   "function claimVested(address token) returns (uint256 amount)",
@@ -44,12 +45,12 @@ export const FACTORY_ABI = parseAbi([
   "function lockedTokens(address token) view returns (uint256)",
   "function setFeeRecipient(address token, address recipient)",
   "function snipeTaxBps(address token) view returns (uint256)",
-  "struct Launch { address token; address creator; address feeRecipient; address quote; uint64 createdAt; uint16 taxBps; uint16 buybackBps; bool graduated; uint256 sold; uint256 raised; uint256 creatorFees; }",
+  "struct Launch { address token; address creator; address feeRecipient; address quote; uint64 createdAt; uint16 taxBps; uint16 buybackBps; bool graduated; uint256 sold; uint256 raised; uint256 creatorFees; bool holderRewards; }",
   "function launchOf(address token) view returns (Launch)",
   "struct Quote { uint256 out; uint256 fee; uint256 tax; uint256 snipe; uint256 net; uint256 used; }",
   "function quoteBuy(address token, uint256 amountIn, address buyer) view returns (Quote)",
   "function quoteSell(address token, uint256 amount) view returns (uint256 out, uint256 fee, uint256 tax)",
-  "struct Info { address token; address creator; address quote; uint64 createdAt; uint16 taxBps; bool graduated; uint256 sold; uint256 raised; uint256 graduation; string name; string symbol; string image; }",
+  "struct Info { address token; address creator; address quote; uint64 createdAt; uint16 taxBps; bool graduated; uint256 sold; uint256 raised; uint256 graduation; bool holderRewards; string name; string symbol; string image; }",
   "function recent(uint256 offset, uint256 count) view returns (Info[])",
   "struct PoolKey { address currency0; address currency1; uint24 fee; int24 tickSpacing; address hooks; }",
   "function poolKeyOf(address token) view returns (PoolKey)",
@@ -64,6 +65,7 @@ export const ERC20_ABI = parseAbi([
   "function balanceOf(address) view returns (uint256)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
+  "function rewardsOf(address) view returns (uint256)",
 ]);
 
 export const ETH_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
