@@ -1,34 +1,34 @@
 "use client";
 
-import { FadeIn, SplitText } from "../Text";
 import { fees } from "@/lib/launchpad-content";
 
 export function Fees() {
   return (
-    <section id="fees" data-tone="dark" data-scene="process" className="relative px-[5vw] py-[16vh]">
-      <div className="mb-12 grid gap-8 md:grid-cols-12 md:items-end">
-        <div className="md:col-span-8">
-          <span className="mb-6 block font-mono text-xs uppercase tracking-[0.2em] opacity-60">Fees</span>
-          <SplitText as="h2" type="chars" text={["Simple,", "on-chain fees."]} className="display text-[clamp(2.6rem,7vw,7.5rem)]" />
-        </div>
-        <FadeIn className="md:col-span-4">
-          <p className="max-w-sm leading-relaxed opacity-70">
-            Launches cost only gas. Every trade pays 1% — 70% to the creator, 30% to Kindle. No taxes.
+    <section id="fees" className="relative px-[5vw] py-20 md:py-28">
+      <div className="mx-auto max-w-6xl">
+        <span className="mb-5 block font-mono text-xs uppercase tracking-[0.2em] opacity-60">Fees</span>
+        <div className="grid gap-8 md:grid-cols-12 md:items-end">
+          <h2 className="display whitespace-nowrap text-[clamp(2.6rem,5.5vw,5rem)] leading-[0.95] md:col-span-6">
+            Simple,
+            <br />
+            on-chain fees.
+          </h2>
+          <p className="max-w-xl text-lg leading-relaxed opacity-80 md:col-span-6 md:text-xl">
+            0.0005 ETH to launch. Every trade pays 1% — 70% to the creator, 30% to Kindle — plus the creator&apos;s optional tax of up to 10%.
           </p>
-        </FadeIn>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {fees.map((f, i) => (
-          <FadeIn key={f.title} delay={(i % 3) * 0.08}>
-            <article className="h-full rounded-3xl border border-current/10 bg-paper p-6">
+        </div>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {fees.map((f) => (
+            <article key={f.title} className="h-full rounded-3xl border border-current/10 bg-paper p-6">
               <p className="text-sm opacity-60">{f.title}</p>
-              <p className="display mt-2 text-4xl text-[#3d7a00]">{f.value}</p>
+              <p className="display mt-2 text-[1.9rem] leading-tight text-[#3d7a00]">{f.value}</p>
               <p className="mt-3 text-sm leading-relaxed opacity-75">{f.text}</p>
             </article>
-          </FadeIn>
-        ))}
+          ))}
+        </div>
+        <p className="mt-6 text-xs opacity-50">Fees are set in Kindle&apos;s factory contract on Robinhood Chain and shown before you sign.</p>
       </div>
-      <p className="mt-6 text-xs opacity-50">Fees are fixed in Kindle&apos;s factory contract on Robinhood Chain.</p>
     </section>
   );
 }

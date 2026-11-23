@@ -5,21 +5,27 @@ import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
 import { Cursor } from "@/components/Cursor";
+import { SITE_URL } from "@/lib/site";
 
 const baloo = Baloo_2({ subsets: ["latin"], variable: "--font-baloo", display: "swap" });
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", display: "swap" });
 const jet = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jet", display: "swap" });
 const serif = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--font-serif", display: "swap" });
 
+const description =
+  "Launch a token on Robinhood Chain in one transaction: a bonding curve that graduates to a locked Uniswap v4 pool, from your own wallet.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Kindle — Token launchpad on Robinhood Chain",
-  description:
-    "Launch tokens on Robinhood Chain, discover new and trending tokens, and swap via Uniswap v3 and v4 — from your own wallet.",
+  description,
   openGraph: {
     title: "Kindle — Launch tokens on Robinhood Chain.",
-    description: "A friendly token launchpad on Robinhood Chain.",
+    description,
     type: "website",
+    siteName: "Kindle",
   },
+  twitter: { card: "summary_large_image", title: "Kindle — Launch tokens on Robinhood Chain.", description },
 };
 
 export const viewport: Viewport = {

@@ -36,6 +36,8 @@ const columns: { title: string; items: Item[] }[] = [
       { label: "API", href: "/docs#developers" },
       ...(FACTORY ? [{ label: "Factory contract", href: `${NETWORKS.robinhood.explorer}/address/${FACTORY}`, external: true }] : []),
       { label: "Robinhood Chain explorer", href: NETWORKS.robinhood.explorer, external: true },
+      { label: "Terms & risks", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
     ],
   },
 ];
