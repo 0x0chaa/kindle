@@ -21,19 +21,12 @@ export function HowItWorks() {
 
         <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {howItWorks.map((s, i) => (
-            <li key={s.title} className="flex flex-col rounded-3xl border border-ink/10 bg-paper p-6">
-              <span className="mb-6 grid size-9 place-items-center rounded-full bg-coral font-mono text-xs font-bold text-[#0b0b0b]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h3 className="mb-2 text-lg font-semibold tracking-tight">{s.title}</h3>
-              <p className="text-sm leading-relaxed opacity-70">{s.desc}</p>
-              <ul className="mt-auto flex flex-wrap gap-1.5 pt-5">
-                {s.tags.map((t) => (
-                  <li key={t} className="rounded-full border border-ink/15 px-2.5 py-1 text-xs opacity-80">
-                    {t}
-                  </li>
-                ))}
-              </ul>
+            <li key={s.title}>
+              <article className="h-full rounded-3xl border border-current/10 bg-paper p-6">
+                <p className="text-sm opacity-60">Step {String(i + 1).padStart(2, "0")}</p>
+                <p className="display mt-2 text-[1.9rem] leading-tight text-[#3d7a00]">{s.title}</p>
+                <p className="mt-3 text-sm leading-relaxed opacity-75">{s.desc}</p>
+              </article>
             </li>
           ))}
         </ol>
