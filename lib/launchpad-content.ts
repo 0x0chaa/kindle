@@ -93,7 +93,7 @@ export const docs: { id: string; title: string; body: string[] }[] = [
     id: "launching",
     title: "Launching a token",
     body: [
-      "Open Launch, connect your wallet, enter a name, a ticker and an image link, choose the pair, an optional creator tax (0–10%) and auto-buyback share, and confirm one transaction.",
+      "Open Launch, connect your wallet, enter a name and a ticker, upload an image file, choose the pair, an optional creator tax (0–10%) and auto-buyback share, and confirm one transaction.",
       "Kindle's factory creates a token with a fixed supply of 1,000,000,000. 800M are sold on a bonding curve with virtual reserves (for ETH pairs the start price is ≈ 0.0000000013 ETH, about 1.3 ETH fully diluted). You can add a first buy in the same transaction.",
       "When the curve sells out (~4.2 ETH for ETH pairs, or the pair's own target), the remaining 200M tokens and everything raised open a Uniswap v4 pool owned by the factory, which has no way to remove it. The creator receives 70% of the 1% fee plus all of the creator tax. There is no admin key on the token. After launch, share the exact contract address from your own accounts.",
     ],

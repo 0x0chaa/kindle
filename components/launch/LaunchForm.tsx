@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createPublicClient, createWalletClient, custom, defineChain, formatEther, formatUnits, http, parseEventLogs, parseUnits, type Address } from "viem";
-import { Check, Loader2, Rocket } from "lucide-react";
+import { Check, ImagePlus, Loader2, Rocket } from "lucide-react";
 import { useApp } from "../Providers";
 import { WalletButton } from "../WalletButton";
-import { TokenAvatar } from "../token/TokenAvatar";
 import { useAccount } from "@/lib/wallet-store";
 import { ensureChain, getWallet } from "@/lib/wallet";
 import { NETWORKS } from "@/lib/networks";
@@ -52,6 +51,9 @@ export function LaunchForm() {
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [image, setImage] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
   const [agree, setAgree] = useState(false);
   const [buyEth, setBuyEth] = useState("");
   const [pairs, setPairs] = useState<PairOpt[]>([]);
@@ -93,13 +95,35 @@ export function LaunchForm() {
     return { amountIn, out, pct: Number((out * 10000n) / (1_000_000_000n * 10n ** 18n)) / 100 };
   })();
 
-  const imageOk = /^https:\/\/\S+$/.test(image.trim()) || /^ipfs:\/\/\S+$/.test(image.trim());
+  const imageOk = /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\/\S+$/i.test(image);
+
+  async function upload(file: File) {
+    setImageError("");
+    setImage("");
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(URL.createObjectURL(file));
+    if (file.size > 1024 * 1024) return setImageError("The image must be 1 MB or smaller.");
+    if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type)) return setImageError("Use a PNG, JPG, GIF or WebP image.");
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const r = await fetch("/api/upload", { method: "POST", body });
+      const j = (await r.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!r.ok || !j.url) throw new Error(j.error || "Upload failed. Try again.");
+      setImage(j.url);
+    } catch (e) {
+      setImageError(e instanceof Error ? e.message : "Upload failed. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
   const valid = name.trim().length >= 2 && /^[A-Za-z0-9]{2,12}$/.test(symbol.trim()) && imageOk && agree;
 
   const launch = async () => {
     setError("");
     if (!account) return setError("Connect your wallet first.");
-    if (!valid) return setError("Fill in a name, a 2–12 character ticker, an https image link, and tick the box.");
+    if (!valid) return setError("Fill in a name, a 2–12 character ticker, an uploaded image, and tick the box.");
     const eth = getWallet();
     if (!eth) return setError("No browser wallet found. Open this page in your wallet app's browser.");
     setStatus("signing");
@@ -222,18 +246,55 @@ export function LaunchForm() {
           <input
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 12))}
-            placeholder="MCAT"
+            placeholder="KCAT"
             className={`${field} mt-1 font-normal uppercase`}
           />
         </label>
       </div>
-      <label className="block text-sm font-semibold">
-        Image link (square, https or ipfs)
-        <div className="mt-1 flex items-center gap-3">
-          <TokenAvatar src={imageOk ? image.trim() : null} symbol={symbol || "?"} className="size-12 shrink-0" />
-          <input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…/token.png" className={`${field} font-normal`} />
-        </div>
-      </label>
+      <div className="block text-sm font-semibold">
+        Image
+        <label
+          className={`mt-1 flex cursor-pointer items-center gap-4 rounded-2xl border border-dashed p-3 transition-colors hover:bg-current/5 ${imageError ? "border-red-500/60" : "border-current/25"}`}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const f = e.dataTransfer.files?.[0];
+            if (f) void upload(f);
+          }}
+        >
+          {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview} alt="" className="size-14 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="grid size-14 shrink-0 place-items-center rounded-full bg-current/10">
+              <ImagePlus className="size-6 opacity-60" />
+            </span>
+          )}
+          <span className="min-w-0 font-normal">
+            <span className="block font-semibold">
+              {uploading ? "Uploading…" : image ? "Image ready — tap to change" : "Add image file"}
+            </span>
+            <span className="block text-xs opacity-60">Square PNG, JPG, GIF or WebP, up to 1 MB</span>
+          </span>
+          {uploading && <Loader2 className="ml-auto size-5 shrink-0 animate-spin opacity-60" />}
+          {image && !uploading && <Check className="ml-auto size-5 shrink-0 text-[#3d7a00]" />}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void upload(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {imageError && (
+          <span role="alert" className="mt-1 block text-xs font-normal text-red-500">
+            {imageError}
+          </span>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="block text-sm font-semibold">
