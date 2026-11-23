@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Baloo_2, Nunito, JetBrains_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { AuthProvider } from "@/components/AuthProvider";
 import { Nav } from "@/components/Nav";
 import { Cursor } from "@/components/Cursor";
 import { SITE_URL } from "@/lib/site";
@@ -50,11 +51,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="font-sans">
-        <Providers>
-          <Nav />
-          <main>{children}</main>
-          <Cursor />
-        </Providers>
+        <AuthProvider>
+          <Providers>
+            <Nav />
+            <main>{children}</main>
+            <Cursor />
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -9,13 +9,27 @@ type Eip1193 = {
   removeListener?: (event: string, cb: (...a: unknown[]) => void) => void;
 };
 
-export function getWallet(): Eip1193 | null {
+export type { Eip1193 };
+
+// Set when the user signs in with X or email: their Privy wallet becomes the active provider.
+let active: Eip1193 | null = null;
+export function setActiveProvider(p: Eip1193 | null) {
+  active = p;
+}
+
+/** The browser extension wallet (window.ethereum), if any. */
+export function getInjected(): Eip1193 | null {
   if (typeof window === "undefined") return null;
   return (window as unknown as { ethereum?: Eip1193 }).ethereum ?? null;
 }
 
+/** The wallet that signs: the X/email wallet when signed in that way, otherwise the browser wallet. */
+export function getWallet(): Eip1193 | null {
+  return active ?? getInjected();
+}
+
 export async function connectWallet(): Promise<string> {
-  const eth = getWallet();
+  const eth = getInjected();
   if (!eth) throw new Error("No browser wallet found. Install MetaMask, Coinbase Wallet or Rabby, then reload.");
   const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
   if (!accounts?.[0]) throw new Error("The wallet didn't share an account.");

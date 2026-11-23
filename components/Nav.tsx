@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "./ThemeToggle";
 import { AnimatePresence, motion } from "motion/react";
 import { useApp } from "./Providers";
-import { Magnetic } from "./Magnetic";
 import { TextScanner } from "@/components/ui/animated-text-10";
 import { socials } from "@/lib/content";
 import { EASE_EXPO, EASE_QUART } from "@/lib/utils";
@@ -94,9 +93,9 @@ export function Nav() {
 
 
         <div className="flex items-center gap-3">
-          <Magnetic className="hidden md:inline-block">
-            <WalletButton tone="light" className="border-current/30" />
-          </Magnetic>
+          <div className="hidden md:block">
+            <WalletButton tone="light" iconOnly className="border-current/30" />
+          </div>
           <ThemeToggle />
           <button
             type="button"
