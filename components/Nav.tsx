@@ -8,6 +8,7 @@ import { TextScanner } from "@/components/ui/animated-text-10";
 import { socials } from "@/lib/content";
 import { EASE_EXPO, EASE_QUART } from "@/lib/utils";
 import { WalletButton } from "./WalletButton";
+import { WalletCard } from "./WalletCard";
 
 /** Everything in the menu (top-right ☰). The desktop bar shows the `bar` ones too. */
 const links = [
@@ -162,7 +163,7 @@ export function Nav() {
               exit={{ opacity: 0 }}
               className="relative space-y-4 text-sm"
             >
-              <WalletButton tone="blue" />
+              <WalletCard />
               <div className="flex flex-wrap gap-x-6 gap-y-2 opacity-70">
                 {socials.map((s) =>
                   s.href ? (
