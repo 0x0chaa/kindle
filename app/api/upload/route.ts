@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   const kind = sniff(bytes);
   if (!kind) return NextResponse.json({ error: "Use a PNG, JPG, GIF or WebP image." }, { status: 415 });
 
-  const blob = await put(`tokens/${crypto.randomUUID()}.${kind.ext}`, bytes, {
+  const blob = await put(`tokens/${crypto.randomUUID()}.${kind.ext}`, Buffer.from(bytes), {
     access: "public",
     contentType: kind.type,
     cacheControlMaxAge: 60 * 60 * 24 * 365,
